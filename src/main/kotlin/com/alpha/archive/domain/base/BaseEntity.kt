@@ -5,6 +5,7 @@ import jakarta.persistence.EntityListeners
 import jakarta.persistence.MappedSuperclass
 import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -13,19 +14,19 @@ import java.time.ZoneOffset
 abstract class BaseEntity : BasicBaseEntity() {
 
     @LastModifiedDate
-    @Column(name = "\"UpdatedAt\"", nullable = true)
-    var updatedAt: OffsetDateTime? = null
+    @Column(name = "\"updated_at\"", nullable = true)
+    var updatedAt: LocalDateTime? = null
         protected set
 
-    @Column(name = "\"DeletedAt\"", nullable = true)
-    var deletedAt: OffsetDateTime? = null
+    @Column(name = "\"deleted_at\"", nullable = true)
+    var deletedAt: LocalDateTime? = null
         protected set
 
     fun delete() {
-        deletedAt = OffsetDateTime.now(ZoneOffset.UTC)
+        deletedAt = LocalDateTime.now()
     }
 
     fun update() {
-        updatedAt = OffsetDateTime.now(ZoneOffset.UTC)
+        updatedAt = LocalDateTime.now()
     }
 }

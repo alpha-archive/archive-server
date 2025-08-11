@@ -11,6 +11,7 @@ import org.hibernate.proxy.HibernateProxy
 import org.springframework.data.domain.Persistable
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.io.Serializable
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.*
@@ -19,11 +20,11 @@ import java.util.*
 @EntityListeners(AuditingEntityListener::class)
 abstract class BasicBaseEntity : Persistable<UUID> {
     @Id
-    @Column(name = "\"Id\"")
+    @Column(name = "\"id\"")
     private val id: UUID = UlidCreator.getMonotonicUlid().toUuid()
 
-    @Column(name = "\"CreatedAt\"", nullable = false)
-    var createdAt: OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC)
+    @Column(name = "\"created_at\"", nullable = false)
+    var createdAt: LocalDateTime = LocalDateTime.now()
         protected set
 
     @Transient
