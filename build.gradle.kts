@@ -22,6 +22,10 @@ repositories {
 extra["springCloudVersion"] = "2024.0.2"
 
 dependencies {
+	implementation("com.github.f4b6a3:ulid-creator:5.2.3")
+	// Swagger
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-web")
