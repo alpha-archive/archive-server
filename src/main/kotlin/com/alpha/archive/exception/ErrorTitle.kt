@@ -31,15 +31,10 @@ enum class ErrorTitle(val status: HttpStatus, val message: String) {
 
     // 404 Not Found
     NotFoundEndpoint(HttpStatus.NOT_FOUND, "존재 하지 않는 엔드포인트 입니다."),
+    NotFoundUser(HttpStatus.NOT_FOUND, "존재하지 않는 사용자입니다."),
     
     // 405 Method Not Allowed
     MethodNotAllowed(HttpStatus.METHOD_NOT_ALLOWED, "허용되지 않은 메소드입니다."),
-    
-    // 409 Conflict
-    // TODO: 필요시 409 에러 추가
-    
-    // 429 Too Many Requests
-    TwilioManyRequestError(HttpStatus.TOO_MANY_REQUESTS, "너무 많은 인증 시도를 요청했습니다."),
     
     // 500 Internal Server Error
     InternalServerError(HttpStatus.INTERNAL_SERVER_ERROR, "서버 에러가 발생했습니다."),
@@ -49,4 +44,9 @@ enum class ErrorTitle(val status: HttpStatus, val message: String) {
      * 에러 타이틀의 이름을 반환 (enum의 name과 동일)
      */
     val errorName: String get() = this.name
+    
+    /**
+     * 스웨거 문서화를 위한 이름 반환 메서드
+     */
+    fun getName(): String = this.name
 }

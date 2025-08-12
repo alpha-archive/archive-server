@@ -2,37 +2,34 @@ package com.alpha.archive.domain.base
 
 import com.github.f4b6a3.ulid.UlidCreator
 import jakarta.persistence.Column
-import jakarta.persistence.EntityListeners
 import jakarta.persistence.Id
 import jakarta.persistence.MappedSuperclass
 import jakarta.persistence.PostLoad
 import jakarta.persistence.PostPersist
+import jakarta.persistence.Transient
 import org.hibernate.proxy.HibernateProxy
+import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.domain.Persistable
-import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.io.Serializable
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.*
 
 @MappedSuperclass
-@EntityListeners(AuditingEntityListener::class)
-abstract class BasicBaseEntity : Persistable<UUID> {
+abstract class UlidPrimaryKeyEntity : Persistable<String> {
     @Id
-    @Column(name = "\"id\"")
-    private val id: UUID = UlidCreator.getMonotonicUlid().toUuid()
+    @Column(name = "id")
+    private val id: String = UlidCreator.getMonotonicUlid().toString()
 
-    @Column(name = "\"created_at\"", nullable = false)
-    var createdAt: LocalDateTime = LocalDateTime.now()
-        protected set
+    @CreatedDate
+    @Column(name = "created_at", nullable = false)
+    val createdAt: LocalDateTime = LocalDateTime.now()
 
     @Transient
     private var _isNew = true
 
-    override fun getId(): UUID = id
-
     override fun isNew(): Boolean = _isNew
+
+    override fun getId(): String = id
 
     override fun equals(other: Any?): Boolean {
         if (other == null) {
@@ -50,7 +47,7 @@ abstract class BasicBaseEntity : Persistable<UUID> {
         return if (obj is HibernateProxy) {
             obj.hibernateLazyInitializer.identifier as Serializable
         } else {
-            (obj as BasicBaseEntity).id
+            (obj as UlidPrimaryKeyEntity).id
         }
     }
 

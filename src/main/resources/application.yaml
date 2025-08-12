@@ -1,0 +1,45 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: archive
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/archive
+    username: archive_user
+    password: archive_password
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+jwt:
+  common:
+    key: YXJjaGl2ZV9qd3Rfc2VjcmV0X2tleV90aGlzX2lzX2FfbG9uZ19zZWNyZXRfa2V5X2Zvcl9qd3RfdG9rZW5fZ2VuZXJhdGlvbl9hbmRfdmFsaWRhdGlvbg==
+
+kakao:
+  oauth:
+    client-id: # 여길 채우세요.
+    client-secret: # 여길 채우세요.
+    redirect-uri: http://localhost:8080/oauth/kakao
+    authorization-uri: https://kauth.kakao.com/oauth/authorize
+    token-uri: https://kauth.kakao.com/oauth/token
+    user-info-uri: https://kapi.kakao.com/v2/user/me
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

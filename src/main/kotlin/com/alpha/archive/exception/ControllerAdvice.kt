@@ -1,7 +1,6 @@
 package com.alpha.archive.exception
 
 import com.alpha.archive.common.dto.ApiResponse
-import com.alpha.archive.util.ResponseUtil
 import com.alpha.archive.util.toResponseEntity
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import feign.FeignException
