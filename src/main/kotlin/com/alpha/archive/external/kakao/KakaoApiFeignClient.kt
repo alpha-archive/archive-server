@@ -1,6 +1,6 @@
 package com.alpha.archive.external.kakao
 
-import com.alpha.archive.auth.dto.kakao.KakaoUserInfoResponse
+import com.alpha.archive.external.kakao.dto.KakaoUserInfoResponse
 import org.springframework.cloud.openfeign.FeignClient
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping

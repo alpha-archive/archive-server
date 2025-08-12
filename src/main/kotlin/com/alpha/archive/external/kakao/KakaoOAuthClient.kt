@@ -1,10 +1,10 @@
 package com.alpha.archive.external.kakao
 
-import com.alpha.archive.auth.dto.kakao.KakaoTokenResponse
-import com.alpha.archive.auth.dto.kakao.KakaoUserInfoResponse
 import com.alpha.archive.config.KakaoOAuthConfig
 import com.alpha.archive.exception.ApiException
 import com.alpha.archive.exception.ErrorTitle
+import com.alpha.archive.external.kakao.dto.KakaoTokenResponse
+import com.alpha.archive.external.kakao.dto.KakaoUserInfoResponse
 import feign.FeignException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service

@@ -1,7 +1,7 @@
 package com.alpha.archive.external.kakao
 
-import com.alpha.archive.auth.dto.kakao.KakaoTokenResponse
 import com.alpha.archive.config.FeignConfig
+import com.alpha.archive.external.kakao.dto.KakaoTokenResponse
 import org.springframework.cloud.openfeign.FeignClient
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.PostMapping

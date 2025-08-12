@@ -1,4 +1,4 @@
-package com.alpha.archive.auth.dto.kakao
+package com.alpha.archive.external.kakao.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
