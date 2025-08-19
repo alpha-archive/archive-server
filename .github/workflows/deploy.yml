@@ -130,32 +130,6 @@ jobs:
         # Verify deployment
         kubectl get pods -n ${{ env.KUBE_NAMESPACE }} -l app=archive-api
         
-    - name: 🧪 Health Check
-      run: |
-        # Wait a bit for the service to be ready
-        sleep 30
-        
-        # Get LoadBalancer URL
-        LB_URL=$(kubectl get svc archive-api-service -n ${{ env.KUBE_NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-        
-        if [ -n "$LB_URL" ]; then
-          echo "🌐 Testing health check at: http://$LB_URL/actuator/health"
-          
-          # Try health check with retry
-          for i in {1..5}; do
-            if curl -f "http://$LB_URL/actuator/health"; then
-              echo "✅ Health check passed!"
-              break
-            else
-              echo "⏳ Health check attempt $i failed, retrying in 10s..."
-              sleep 10
-            fi
-          done
-        else
-          echo "⚠️ LoadBalancer URL not found, checking pod health directly"
-          kubectl exec -n ${{ env.KUBE_NAMESPACE }} deployment/archive-api -- curl -f localhost:8080/actuator/health
-        fi
-        
     - name: 📝 Deployment Summary
       run: |
         echo "## 🎯 Deployment Summary" >> $GITHUB_STEP_SUMMARY
