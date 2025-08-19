@@ -2,11 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: archive-api
-  namespace: default
+  namespace: archive
   labels:
     app: archive-api
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: archive-api
@@ -15,21 +15,38 @@ spec:
       labels:
         app: archive-api
     spec:
+      imagePullSecrets:
+      - name: ncp-registry-secret
       containers:
       - name: archive-api
-        image: archive-cr.kr.ncr.ntruss.com/archive-api:latest
+        image: archive-cr.kr.ncr.ntruss.com/archive-api:v3
         ports:
         - containerPort: 8080
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "k8s"
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: postgresql-config
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            configMapKeyRef:
+              name: postgresql-config
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-secret
+              key: POSTGRES_PASSWORD
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "512Mi"
+            cpu: "200m"
         livenessProbe:
           httpGet:
             path: /actuator/health

@@ -6,10 +6,10 @@ spring:
     name: archive
   
   datasource:
-    # PostgreSQL 서비스로 연결 (쿠버네티스 내부 DNS)
-    url: jdbc:postgresql://postgresql-service.postgresql.svc.cluster.local:5432/archive-db
-    username: archive-user
-    password: archive-password
+    # PostgreSQL 서비스로 연결 (같은 namespace)
+    url: jdbc:postgresql://postgresql-service:5432/${POSTGRES_DB:archive-db}
+    username: ${POSTGRES_USER:archive-user}
+    password: ${POSTGRES_PASSWORD:archive-password}
     driver-class-name: org.postgresql.Driver
   
   jpa:
@@ -21,11 +21,10 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false  # 프로덕션에서는 false로 설정
   
-  # Redis는 일단 제거 (필요시 나중에 추가)
-  # data:
-  #   redis:
-  #     host: redis-service.default.svc.cluster.local
-  #     port: 6379
+  data:
+    redis:
+      host: redis-service
+      port: 6379
 
 jwt:
   common:
