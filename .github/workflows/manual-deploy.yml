@@ -44,11 +44,11 @@ jobs:
       
     - name: 🔐 Login to NCP Container Registry
       if: ${{ !inputs.skip_build }}
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.NCP_REGISTRY }}
-        username: ${{ secrets.NCP_ACCESS_KEY }}
-        password: ${{ secrets.NCP_SECRET_KEY }}
+      run: |
+        echo "🔑 Logging in to NCP Container Registry..."
+        echo "${{ secrets.NCP_SECRET_KEY }}" | docker login ${{ env.NCP_REGISTRY }} \
+          --username "${{ secrets.NCP_ACCESS_KEY }}" \
+          --password-stdin
         
     - name: 🏗️ Build and Push Docker Image
       if: ${{ !inputs.skip_build }}
@@ -63,13 +63,36 @@ jobs:
       with:
         version: 'v1.28.0'
         
+    - name: 📥 Install NCP IAM Authenticator
+      run: |
+        # Download and install ncp-iam-authenticator
+        curl -o ncp-iam-authenticator https://github.com/NaverCloudPlatform/ncp-iam-authenticator/releases/latest/download/ncp-iam-authenticator_linux_amd64
+        chmod +x ./ncp-iam-authenticator
+        sudo mv ./ncp-iam-authenticator /usr/local/bin/
+        
     - name: ⚙️ Configure kubectl for NCP
+      env:
+        NCP_ACCESS_KEY_ID: ${{ secrets.NCP_ACCESS_KEY }}
+        NCP_SECRET_ACCESS_KEY: ${{ secrets.NCP_SECRET_KEY }}
+        NCP_REGION: KR
       run: |
         mkdir -p ~/.kube
         echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
         kubectl config set-context --current --namespace=${{ env.KUBE_NAMESPACE }}
         
+        # Export NCP credentials for authenticator
+        export NCP_ACCESS_KEY_ID="${{ secrets.NCP_ACCESS_KEY }}"
+        export NCP_SECRET_ACCESS_KEY="${{ secrets.NCP_SECRET_KEY }}"
+        export NCP_REGION="KR"
+        
+        # Verify connection
+        kubectl cluster-info
+        
     - name: 🚀 Deploy to Kubernetes
+      env:
+        NCP_ACCESS_KEY_ID: ${{ secrets.NCP_ACCESS_KEY }}
+        NCP_SECRET_ACCESS_KEY: ${{ secrets.NCP_SECRET_KEY }}
+        NCP_REGION: KR
       run: |
         echo "🚀 Deploying image: ${{ env.NCP_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.image_tag }}"
         
