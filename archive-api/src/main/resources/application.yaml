@@ -31,8 +31,8 @@ jwt:
 
 kakao:
   oauth:
-    client-id: ## "여기를 채우세요"
-    client-secret: ## "여기를 채우세요"
+    client-id: 86286e8983c278a1d5fb9b937b09d8f1
+    client-secret: eZHbznKwU6QObpeRgSp7CSAVWXjlleiw
     redirect-uri: http://localhost:8080/oauth/kakao
     authorization-uri: https://kauth.kakao.com/oauth/authorize
     token-uri: https://kauth.kakao.com/oauth/token
