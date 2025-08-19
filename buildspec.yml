@@ -1,0 +1,31 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Starting pre-build phase...
+      - echo Logging in to NCP Container Registry...
+      
+  build:
+    commands:
+      - echo Starting build phase...
+      - echo Building the Gradle project...
+      - ./gradlew clean build -x test
+      - echo Building Docker image...
+      - docker build -t archive-api .
+      - echo Tagging Docker image...
+      - docker tag archive-api:latest archive-cr.kr.ncr.ntruss.com/archive-api:$BUILD_NUMBER
+      - docker tag archive-api:latest archive-cr.kr.ncr.ntruss.com/archive-api:latest
+      
+  post_build:
+    commands:
+      - echo Starting post-build phase...
+      - echo Pushing Docker image to registry...
+      - docker push archive-cr.kr.ncr.ntruss.com/archive-api:$BUILD_NUMBER
+      - docker push archive-cr.kr.ncr.ntruss.com/archive-api:latest
+      - echo Build completed successfully!
+
+artifacts:
+  files:
+    - k8s/**/*
+  name: k8s-manifests
