@@ -1,8 +1,21 @@
-FROM gradle:7.6.0-jdk17 AS builder
+# 1단계: Gradle 빌드
+FROM azul/zulu-openjdk:17 AS builder
 WORKDIR /workspace
-COPY . .
-RUN gradle :archive-api:build --no-daemon
 
+# gradlew 실행 권한 주기
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle settings.gradle ./
+COPY user user
+
+RUN chmod +x ./gradlew
+RUN ./gradlew user:bootJar --no-daemon
+
+# 2단계: 실행 환경
 FROM azul/zulu-openjdk:17
-COPY --from=builder /workspace/archive-api/build/libs/archive-api-0.0.1-SNAPSHOT.jar app.jar
-ENTRYPOINT ["java","-jar","/app.jar"]
+WORKDIR /app
+
+# 빌드된 jar 복사
+COPY --from=builder /workspace/user/build/libs/*.jar app.jar
+
+ENTRYPOINT ["java","-jar","/app/app.jar"]
