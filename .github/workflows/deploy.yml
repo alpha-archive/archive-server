@@ -87,34 +87,37 @@ jobs:
         
     - name: 📥 Install NCP IAM Authenticator
       run: |
-        # Download and install ncp-iam-authenticator
-        curl -o ncp-iam-authenticator https://github.com/NaverCloudPlatform/ncp-iam-authenticator/releases/latest/download/ncp-iam-authenticator_linux_amd64
+        # Download and install ncp-iam-authenticator from official NCP storage
+        curl -o ncp-iam-authenticator https://kr.object.ncloudstorage.com/nks-download/ncp-iam-authenticator/v1.0.5/linux/amd64/ncp-iam-authenticator
         chmod +x ./ncp-iam-authenticator
         sudo mv ./ncp-iam-authenticator /usr/local/bin/
         
+        # Verify installation
+        ncp-iam-authenticator help
+        
     - name: ⚙️ Configure kubectl for NCP
       env:
-        NCP_ACCESS_KEY_ID: ${{ secrets.NCP_ACCESS_KEY }}
-        NCP_SECRET_ACCESS_KEY: ${{ secrets.NCP_SECRET_KEY }}
-        NCP_REGION: KR
+        NCLOUD_ACCESS_KEY: ${{ secrets.NCP_ACCESS_KEY }}
+        NCLOUD_SECRET_KEY: ${{ secrets.NCP_SECRET_KEY }}
+        NCLOUD_API_GW: https://ncloud.apigw.ntruss.com
       run: |
         mkdir -p ~/.kube
         echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
         kubectl config set-context --current --namespace=${{ env.KUBE_NAMESPACE }}
         
         # Export NCP credentials for authenticator
-        export NCP_ACCESS_KEY_ID="${{ secrets.NCP_ACCESS_KEY }}"
-        export NCP_SECRET_ACCESS_KEY="${{ secrets.NCP_SECRET_KEY }}"
-        export NCP_REGION="KR"
+        export NCLOUD_ACCESS_KEY="${{ secrets.NCP_ACCESS_KEY }}"
+        export NCLOUD_SECRET_KEY="${{ secrets.NCP_SECRET_KEY }}"
+        export NCLOUD_API_GW="https://ncloud.apigw.ntruss.com"
         
         # Verify connection
         kubectl cluster-info
         
     - name: 🚀 Deploy to Kubernetes
       env:
-        NCP_ACCESS_KEY_ID: ${{ secrets.NCP_ACCESS_KEY }}
-        NCP_SECRET_ACCESS_KEY: ${{ secrets.NCP_SECRET_KEY }}
-        NCP_REGION: KR
+        NCLOUD_ACCESS_KEY: ${{ secrets.NCP_ACCESS_KEY }}
+        NCLOUD_SECRET_KEY: ${{ secrets.NCP_SECRET_KEY }}
+        NCLOUD_API_GW: https://ncloud.apigw.ntruss.com
       run: |
         # Update deployment image
         kubectl set image deployment/archive-api \
