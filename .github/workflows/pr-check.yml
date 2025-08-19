@@ -1,0 +1,55 @@
+name: 🔍 PR Check & Test
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'archive-api/**'
+      - 'archive-auth/**'
+      - 'archive-common/**'
+      - 'archive-domain/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: ☕ Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: 📦 Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: 🔨 Build and Test
+      run: |
+        chmod +x ./gradlew
+        ./gradlew build
+        
+    - name: 📊 Test Report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()
+      with:
+        name: Test Results
+        path: '**/build/test-results/test/TEST-*.xml'
+        reporter: java-junit
+        
+    - name: 🐳 Test Docker Build
+      run: |
+        # Test if Docker image builds successfully
+        docker build -t test-image .
+        echo "✅ Docker build successful"

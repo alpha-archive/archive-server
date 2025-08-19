@@ -1,0 +1,165 @@
+name: 🚀 Deploy Archive API to Kubernetes
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'archive-api/**'
+      - 'archive-auth/**'
+      - 'archive-common/**'
+      - 'archive-domain/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+  workflow_dispatch:
+
+env:
+  NCP_REGISTRY: archive-cr.kr.ncr.ntruss.com
+  IMAGE_NAME: archive-api
+  KUBE_NAMESPACE: archive
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: ☕ Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        
+    - name: 📦 Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: 🔨 Build with Gradle
+      run: |
+        chmod +x ./gradlew
+        ./gradlew :archive-api:build -x test
+        
+    - name: 🔍 Get version from build.gradle
+      id: version
+      run: |
+        VERSION=$(grep -E '^version\s*=' build.gradle.kts | sed -E 's/.*"(.+)".*/\1/')
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "IMAGE_TAG=v$VERSION-${{ github.run_number }}" >> $GITHUB_OUTPUT
+        echo "📦 Building version: v$VERSION-${{ github.run_number }}"
+        
+    - name: 🐳 Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: 🔐 Login to NCP Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.NCP_REGISTRY }}
+        username: ${{ secrets.NCP_ACCESS_KEY }}
+        password: ${{ secrets.NCP_SECRET_KEY }}
+        
+    - name: 🏗️ Build and Push Docker Image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          ${{ env.NCP_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.IMAGE_TAG }}
+          ${{ env.NCP_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        
+    - name: 🔧 Install kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+        
+    - name: 🏗️ Set up Kustomize
+      run: |
+        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+        sudo mv kustomize /usr/local/bin/
+        
+    - name: ⚙️ Configure kubectl for NCP
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+        kubectl config set-context --current --namespace=${{ env.KUBE_NAMESPACE }}
+        
+    - name: 🚀 Deploy to Kubernetes
+      run: |
+        # Update deployment image
+        kubectl set image deployment/archive-api \
+          archive-api=${{ env.NCP_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.IMAGE_TAG }} \
+          -n ${{ env.KUBE_NAMESPACE }}
+        
+        # Wait for rollout to complete
+        kubectl rollout status deployment/archive-api -n ${{ env.KUBE_NAMESPACE }} --timeout=300s
+        
+        # Verify deployment
+        kubectl get pods -n ${{ env.KUBE_NAMESPACE }} -l app=archive-api
+        
+    - name: 🧪 Health Check
+      run: |
+        # Wait a bit for the service to be ready
+        sleep 30
+        
+        # Get LoadBalancer URL
+        LB_URL=$(kubectl get svc archive-api-service -n ${{ env.KUBE_NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        
+        if [ -n "$LB_URL" ]; then
+          echo "🌐 Testing health check at: http://$LB_URL/actuator/health"
+          
+          # Try health check with retry
+          for i in {1..5}; do
+            if curl -f "http://$LB_URL/actuator/health"; then
+              echo "✅ Health check passed!"
+              break
+            else
+              echo "⏳ Health check attempt $i failed, retrying in 10s..."
+              sleep 10
+            fi
+          done
+        else
+          echo "⚠️ LoadBalancer URL not found, checking pod health directly"
+          kubectl exec -n ${{ env.KUBE_NAMESPACE }} deployment/archive-api -- curl -f localhost:8080/actuator/health
+        fi
+        
+    - name: 📝 Deployment Summary
+      run: |
+        echo "## 🎯 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Image**: \`${{ env.NCP_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Namespace**: \`${{ env.KUBE_NAMESPACE }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Deployment**: \`archive-api\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📊 Pod Status" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        kubectl get pods -n ${{ env.KUBE_NAMESPACE }} -l app=archive-api >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🌐 Service Status" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        kubectl get svc archive-api-service -n ${{ env.KUBE_NAMESPACE }} >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        
+  notification:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: 📢 Notify Deployment Result
+      if: always()
+      run: |
+        if [ "${{ needs.build-and-deploy.result }}" == "success" ]; then
+          echo "🎉 Deployment successful!"
+          echo "✅ Archive API has been successfully deployed to Kubernetes"
+        else
+          echo "❌ Deployment failed!"
+          echo "🔍 Please check the logs for details"
+        fi

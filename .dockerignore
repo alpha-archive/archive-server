@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+.github
+
+# Build outputs
+build/
+target/
+!archive-api/build/libs/*.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Documentation
+README.md
+*.md
+!.github/DEPLOYMENT_SETUP.md
+
+# Kubernetes
+k8s/
+
+# Gradle wrapper (keep gradlew for CI/CD)
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar

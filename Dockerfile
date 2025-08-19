@@ -1,28 +1,30 @@
-# 1단계: 빌드
-FROM azul/zulu-openjdk:17 AS builder
-WORKDIR /workspace
-
-# gradlew 및 gradle wrapper 관련 파일 복사
-COPY gradlew .
-COPY gradle gradle
-
-# 루트 gradle 설정 복사 (Kotlin DSL)
-COPY settings.gradle.kts ./
-
-# 모듈 소스 복사 (archive-api만)
-COPY archive-api archive-api
-
-# gradlew 실행 권한 주기
-RUN chmod +x ./gradlew
-
-# archive-api 모듈 빌드
-RUN ./gradlew :archive-api:bootJar --no-daemon
-
-# 2단계: 실행 환경
 FROM azul/zulu-openjdk:17
-WORKDIR /app
 
-# 빌드 결과 복사
-COPY --from=builder /workspace/archive-api/build/libs/*.jar app.jar
+# 애플리케이션 사용자 생성 (보안)
+RUN addgroup --system spring && adduser --system spring --ingroup spring
 
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+# 애플리케이션 JAR 복사 (동적 경로)
+ARG JAR_FILE_PATH=archive-api/build/libs/*.jar
+COPY ${JAR_FILE_PATH} app.jar
+
+# 파일 권한 설정
+RUN chown spring:spring app.jar
+
+# 애플리케이션 사용자로 전환
+USER spring:spring
+
+# 포트 노출
+EXPOSE 8080
+
+# 헬스체크 추가 (curl 없이 wget 사용)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+
+# JVM 옵션 최적화와 함께 실행
+ENTRYPOINT ["java", \
+  "-XX:+UseContainerSupport", \
+  "-XX:MaxRAMPercentage=75.0", \
+  "-XX:+UseG1GC", \
+  "-XX:+UseStringDeduplication", \
+  "-Djava.security.egd=file:/dev/./urandom", \
+  "-jar", "/app.jar"]

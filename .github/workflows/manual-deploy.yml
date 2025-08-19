@@ -1,0 +1,97 @@
+name: 🎯 Manual Deploy with Custom Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy (e.g., v1.0.0, latest)'
+        required: true
+        default: 'latest'
+      skip_build:
+        description: 'Skip build and only deploy existing image'
+        type: boolean
+        default: false
+
+env:
+  NCP_REGISTRY: archive-cr.kr.ncr.ntruss.com
+  IMAGE_NAME: archive-api
+  KUBE_NAMESPACE: archive
+
+jobs:
+  manual-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      if: ${{ !inputs.skip_build }}
+      uses: actions/checkout@v4
+      
+    - name: ☕ Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        
+    - name: 🔨 Build with Gradle
+      if: ${{ !inputs.skip_build }}
+      run: |
+        chmod +x ./gradlew
+        ./gradlew :archive-api:build -x test
+        
+    - name: 🐳 Set up Docker Buildx
+      if: ${{ !inputs.skip_build }}
+      uses: docker/setup-buildx-action@v3
+      
+    - name: 🔐 Login to NCP Container Registry
+      if: ${{ !inputs.skip_build }}
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.NCP_REGISTRY }}
+        username: ${{ secrets.NCP_ACCESS_KEY }}
+        password: ${{ secrets.NCP_SECRET_KEY }}
+        
+    - name: 🏗️ Build and Push Docker Image
+      if: ${{ !inputs.skip_build }}
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ env.NCP_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.image_tag }}
+        
+    - name: 🔧 Install kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+        
+    - name: ⚙️ Configure kubectl for NCP
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+        kubectl config set-context --current --namespace=${{ env.KUBE_NAMESPACE }}
+        
+    - name: 🚀 Deploy to Kubernetes
+      run: |
+        echo "🚀 Deploying image: ${{ env.NCP_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.image_tag }}"
+        
+        # Update deployment image
+        kubectl set image deployment/archive-api \
+          archive-api=${{ env.NCP_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.image_tag }} \
+          -n ${{ env.KUBE_NAMESPACE }}
+        
+        # Wait for rollout to complete
+        kubectl rollout status deployment/archive-api -n ${{ env.KUBE_NAMESPACE }} --timeout=300s
+        
+        # Verify deployment
+        kubectl get pods -n ${{ env.KUBE_NAMESPACE }} -l app=archive-api
+        
+    - name: 🧪 Health Check
+      run: |
+        sleep 30
+        LB_URL=$(kubectl get svc archive-api-service -n ${{ env.KUBE_NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        
+        if [ -n "$LB_URL" ]; then
+          echo "🌐 Testing health check at: http://$LB_URL/actuator/health"
+          curl -f "http://$LB_URL/actuator/health" || kubectl exec -n ${{ env.KUBE_NAMESPACE }} deployment/archive-api -- curl -f localhost:8080/actuator/health
+        else
+          kubectl exec -n ${{ env.KUBE_NAMESPACE }} deployment/archive-api -- curl -f localhost:8080/actuator/health
+        fi
