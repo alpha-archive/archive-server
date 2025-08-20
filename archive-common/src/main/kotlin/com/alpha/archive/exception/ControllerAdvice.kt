@@ -1,6 +1,8 @@
 package com.alpha.archive.exception
 
 import com.alpha.archive.common.dto.ApiResponse
+import com.alpha.archive.slack.SlackApiSender
+import com.alpha.archive.util.RequestUtil
 import com.alpha.archive.util.toResponseEntity
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import feign.FeignException
@@ -21,7 +23,9 @@ import org.springframework.web.servlet.resource.NoResourceFoundException
  * 전역 예외 처리 컨트롤러
  */
 @RestControllerAdvice
-class ControllerAdvice {
+class ControllerAdvice(
+    private val slackApiSender: SlackApiSender
+) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ControllerAdvice::class.java)
@@ -43,6 +47,40 @@ class ControllerAdvice {
     }
 
     /**
+     * 심각한 에러에 대해 Slack 알림 전송
+     */
+    private fun sendSlackNotificationIfNeeded(
+        request: HttpServletRequest,
+        exception: Exception,
+        statusCode: Int
+    ) {
+        // ExternalServerError (500) 또는 500대 에러인 경우 Slack 알림 전송
+        if (statusCode >= 500 || isExternalServerError(exception)) {
+            try {
+                val errorInfo = RequestUtil.createErrorInfo(
+                    request = request,
+                    statusCode = statusCode,
+                    errorMessage = exception.message ?: "Unknown error",
+                    exception = exception
+                )
+                slackApiSender.sendErrorNotification(errorInfo)
+            } catch (e: Exception) {
+                logger.error("Slack 알림 전송 실패", e)
+            }
+        }
+    }
+
+    /**
+     * ExternalServerError 타입인지 확인
+     */
+    private fun isExternalServerError(exception: Exception): Boolean {
+        return when (exception) {
+            is ApiException -> exception.errorTitle == ErrorTitle.ExternalServerError
+            else -> false
+        }
+    }
+
+    /**
      * 최상위 Exception 처리 (ApiException 제외한 모든 미처리 예외)
      */
     @ExceptionHandler(Exception::class)
@@ -52,6 +90,7 @@ class ControllerAdvice {
         response: HttpServletResponse
     ): ResponseEntity<ApiResponse.Failure> {
         logError(request, exception, "UnhandledException")
+        sendSlackNotificationIfNeeded(request, exception, 500)
         return ErrorTitle.InternalServerError.toResponseEntity()
     }
 
@@ -91,7 +130,9 @@ class ControllerAdvice {
         response: HttpServletResponse
     ): ResponseEntity<ApiResponse.Failure> {
         logError(request, exception)
-        return exception.toResponseEntity()
+        val responseEntity = exception.toResponseEntity()
+        sendSlackNotificationIfNeeded(request, exception, responseEntity.statusCode.value())
+        return responseEntity
     }
 
     /**
@@ -141,6 +182,7 @@ class ControllerAdvice {
         response: HttpServletResponse
     ): ResponseEntity<ApiResponse.Failure> {
         logError(request, exception)
+        sendSlackNotificationIfNeeded(request, exception, 500)
         return ErrorTitle.FeignClientError.toResponseEntity()
     }
 

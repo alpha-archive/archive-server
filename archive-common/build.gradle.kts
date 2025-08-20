@@ -14,6 +14,9 @@ dependencies {
     
     // Swagger
     api("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+    
+    // Slack SDK
+    api("com.slack.api:slack-api-client:1.42.0")
 }
 
 tasks.named<BootJar>("bootJar") {

@@ -34,7 +34,7 @@ kakao:
   oauth:
     client-id: 86286e8983c278a1d5fb9b937b09d8f1
     client-secret: eZHbznKwU6QObpeRgSp7CSAVWXjlleiw
-    redirect-uri: http://archive-archive-api-serv-c1bfd-108259986-b6cce380c931.kr.lb.naverncp.com/oauth/kakao
+    redirect-uri: kakaoe3a4259274d8acae8b02ecd158beb1e4://oauth
     authorization-uri: https://kauth.kakao.com/oauth/authorize
     token-uri: https://kauth.kakao.com/oauth/token
     user-info-uri: https://kapi.kakao.com/v2/user/me
@@ -44,3 +44,7 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+slack:
+  webhook:
+    url: https://hooks.slack.com/services/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
