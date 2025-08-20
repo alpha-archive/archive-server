@@ -38,24 +38,11 @@ class AuthServiceImpl(
         // 2. 사용자 정보 추출
         val kakaoId = kakaoUserInfo.id
         
-        // 닉네임 추출 (동의 여부 확인)
-        val nickname = when {
-            kakaoUserInfo.kakaoAccount?.profileNicknameNeedsAgreement == true -> {
-                "카카오사용자_$kakaoId"
-            }
-            else -> kakaoUserInfo.kakaoAccount?.profile?.nickname 
-                ?: kakaoUserInfo.properties?.nickname 
+        val nickname = kakaoUserInfo.kakaoAccount?.profile?.nickname
                 ?: "카카오사용자_$kakaoId"
-        }
         
-        // 프로필 이미지 추출 (동의 여부 확인)
-        val profileImageUrl = when {
-            kakaoUserInfo.kakaoAccount?.profileImageNeedsAgreement == true -> {
-                null
-            }
-            else -> kakaoUserInfo.kakaoAccount?.profile?.profileImageUrl
+        val profileImageUrl = kakaoUserInfo.kakaoAccount?.profile?.profileImageUrl
                 ?: kakaoUserInfo.properties?.profileImage
-        }
         
         val email = kakaoUserInfo.kakaoAccount?.email
         
