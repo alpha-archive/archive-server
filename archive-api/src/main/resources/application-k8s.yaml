@@ -34,7 +34,7 @@ kakao:
   oauth:
     client-id: 86286e8983c278a1d5fb9b937b09d8f1
     client-secret: eZHbznKwU6QObpeRgSp7CSAVWXjlleiw
-    redirect-uri: http://localhost:8080/oauth/kakao
+    redirect-uri: http://archive-archive-api-serv-c1bfd-108259986-b6cce380c931.kr.lb.naverncp.com/oauth/kakao
     authorization-uri: https://kauth.kakao.com/oauth/authorize
     token-uri: https://kauth.kakao.com/oauth/token
     user-info-uri: https://kapi.kakao.com/v2/user/me
