@@ -18,6 +18,6 @@ interface KakaoApiFeignClient {
         consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE]
     )
     fun getUserInfo(
-        @RequestHeader("Authorization") authorization: String
+        @RequestHeader("Authorization") authorization: String,
     ): KakaoUserInfoResponse
 }

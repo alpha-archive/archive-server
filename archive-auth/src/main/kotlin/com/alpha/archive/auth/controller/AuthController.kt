@@ -2,7 +2,6 @@ package com.alpha.archive.auth.controller
 
 import com.alpha.archive.auth.dto.request.KakaoLoginRequest
 import com.alpha.archive.auth.dto.request.RefreshTokenRequest
-import com.alpha.archive.auth.dto.response.AuthUrlResponse
 import com.alpha.archive.auth.dto.response.TokenResponse
 import com.alpha.archive.auth.external.redis.RedisService
 import com.alpha.archive.auth.security.service.ArchiveUserDetails
@@ -32,16 +31,9 @@ class AuthController(
     private val redisService: RedisService
 ) {
 
-    @ArchiveGetMapping("/kakao/url")
-    @SwaggerApiResponse(responseCode = "200", description = "카카오 로그인 URL 조회 성공")
-    @Operation(summary = "카카오 로그인 URL을 조회하는 api입니다.")
-    fun getKakaoAuthUrl(): ResponseEntity<ApiResponse.Success<AuthUrlResponse>> {
-        return ResponseUtil.success("카카오 로그인 URL 조회 성공", authService.getKakaoAuthUrl())
-    }
-
     @ArchivePostMapping("/kakao/login")
     @SwaggerApiResponse(responseCode = "200", description = "카카오 로그인 성공")
-    @Operation(summary = "카카오 인증 코드로 로그인하는 api입니다.")
+    @Operation(summary = "카카오 액세스 토큰으로 로그인하는 api입니다.", description = "안드로이드 SDK에서 발급받은 카카오 액세스 토큰을 사용하여 로그인합니다.")
     @CustomFailResponseAnnotation(ErrorTitle.InvalidInputValue)
     @CustomFailResponseAnnotation(ErrorTitle.ExternalServerError)
     fun kakaoLogin(
