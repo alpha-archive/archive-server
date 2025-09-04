@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: 
+    url: jdbc:postgresql://localhost:55432/archive
+#    driver-class-name: org.h2.Driver
+    username: archive
+    password: archive
   
   jpa:
     hibernate:
@@ -11,7 +11,8 @@ spring:
     show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        type.json_format_mapper: jackson
   
   autoconfigure:
     exclude:
