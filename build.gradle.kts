@@ -16,7 +16,7 @@ extra["springCloudVersion"] = "2023.0.6"
 allprojects {
 	group = "com.alpha"
 	version = "0.0.1-SNAPSHOT"
-	
+
 	repositories {
 		mavenCentral()
 	}
@@ -50,30 +50,30 @@ subprojects {
 		testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 		testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	}
-	
+
 	configure<KotlinJvmProjectExtension> {
 		compilerOptions {
 			freeCompilerArgs.addAll("-Xjsr305=strict")
 		}
 	}
-	
+
 	// JPA 관련 설정은 domain 모듈에서만 적용
 	if (name == "archive-domain") {
 		apply(plugin = "org.jetbrains.kotlin.plugin.jpa")
-		
+
 		configure<AllOpenExtension> {
 			annotation("jakarta.persistence.Entity")
 			annotation("jakarta.persistence.MappedSuperclass")
 			annotation("jakarta.persistence.Embeddable")
 		}
-		
+
 		configure<NoArgExtension> {
 			annotation("jakarta.persistence.Entity")
 			annotation("jakarta.persistence.MappedSuperclass")
 			annotation("jakarta.persistence.Embeddable")
 		}
 	}
-	
+
 	tasks.withType<Test> {
 		useJUnitPlatform()
 	}

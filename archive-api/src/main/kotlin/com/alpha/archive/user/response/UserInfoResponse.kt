@@ -1,4 +1,4 @@
-package com.alpha.archive.dto.response
+package com.alpha.archive.user.response
 
 import io.swagger.v3.oas.annotations.media.Schema
 
