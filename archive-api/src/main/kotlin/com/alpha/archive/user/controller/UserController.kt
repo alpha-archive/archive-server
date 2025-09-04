@@ -1,10 +1,10 @@
-package com.alpha.archive.controller
+package com.alpha.archive.user.controller
 
 import com.alpha.archive.auth.security.service.ArchiveUserDetails
-import com.alpha.archive.dto.response.UserInfoResponse
+import com.alpha.archive.user.response.UserInfoResponse
 import com.alpha.archive.common.annotations.ArchiveGetMapping
 import com.alpha.archive.common.dto.ApiResponse
-import com.alpha.archive.service.UserService
+import com.alpha.archive.user.service.UserService
 import com.alpha.archive.util.ResponseUtil
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse

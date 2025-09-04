@@ -1,6 +1,7 @@
 package com.alpha.archive.domain.event
 
 import com.alpha.archive.domain.base.UlidPrimaryKeyEntity
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
@@ -28,9 +29,9 @@ class EventImage(
     sortNo: Int = 0,
     type: String? = null,
 ) : UlidPrimaryKeyEntity() {
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false, cascade = [CascadeType.REMOVE])
     @JoinColumn(name = "event_id", nullable = false, foreignKey = ForeignKey(name = "fk_event_image_id"))
-    @OnDelete(action = OnDeleteAction.CASCADE)
     var event: PublicEvent = event
         protected set
 
@@ -49,6 +50,10 @@ class EventImage(
     @CreationTimestamp
     @Column(name = "image_created_at", nullable = false, updatable = false)
     var imageCreatedAt: OffsetDateTime? = null
+        protected set
+
+    @Column(name = "deleted_at", nullable = true)
+    var deletedAt: OffsetDateTime? = null
         protected set
 
     init {

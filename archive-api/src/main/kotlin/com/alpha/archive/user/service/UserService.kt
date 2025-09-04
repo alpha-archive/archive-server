@@ -1,8 +1,7 @@
-package com.alpha.archive.service
+package com.alpha.archive.user.service
 
-import com.alpha.archive.domain.user.User
 import com.alpha.archive.domain.user.UserRepository
-import com.alpha.archive.dto.response.UserInfoResponse
+import com.alpha.archive.user.response.UserInfoResponse
 import com.alpha.archive.exception.ApiException
 import com.alpha.archive.exception.ErrorTitle
 import org.springframework.data.repository.findByIdOrNull

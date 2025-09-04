@@ -64,7 +64,7 @@ class PublicEvent(
     imageUrl: String? = null,
     status: EventStatus = EventStatus.ACTIVE,
 
-    rawPayload: MutableMap<String, Any> = mutableMapOf(),
+    rawPayload: String = "",
     ingestedAt: OffsetDateTime = OffsetDateTime.now()
 ) : UlidPrimaryKeyEntity() {
 
@@ -160,7 +160,7 @@ class PublicEvent(
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "raw_payload", nullable = false, columnDefinition = "jsonb")
-    var rawPayload: MutableMap<String, Any> = rawPayload
+    var rawPayload: String = rawPayload
         protected set
 
     @Column(name = "ingested_at", nullable = false)
@@ -176,99 +176,4 @@ class PublicEvent(
     private val _images: MutableList<EventImage> = mutableListOf()
     val images: List<EventImage> get() = _images
 
-
-    /** 내부 헬퍼: EventImage에서 컬렉션 조작 시 리플렉션 없이 안전하게 접근 */
-    internal fun __attach(child: EventImage) {
-        if (!_images.contains(child)) _images.add(child)
-    }
-    internal fun __detach(child: EventImage) {
-        _images.remove(child)
-    }
-
-    /* 편의 메서드 */
-    fun addImage(image: EventImage) {
-        if (image.event !== this) image.assignOwner(this) // 소유자 동기화
-    }
-
-    /* 생성과 동시에 추가하고 싶을 때 */
-    fun addImage(url: String, sortNo: Int = 0, type: String? = null): EventImage {
-        val img = EventImage(event = this, url = url, sortNo = sortNo, type = type)
-        this.__attach(img) // assignOwner 내부에서도 attach하지만, 중복 호출은 방지됨
-        return img
-    }
-
-    fun removeImage(image: EventImage) {
-        _images.remove(image)
-    }
-
-    /* 전체 교체 */
-    fun replaceImages(urlsInOrder: List<String>) {
-        // 기존 모두 제거 (orphanRemoval로 DELETE 발생)
-        _images.toList().forEach { removeImage(it) }
-        // 새로 추가
-        urlsInOrder.forEachIndexed { index, url -> addImage(url = url, sortNo = index) }
-    }
-
-    /* 정렬변경 */
-    fun reorderImages(idToSortNo: Map<String, Int>) {
-        _images.forEach { img ->
-            idToSortNo[img.id]?.let { newOrder -> img.changeOrder(newOrder) }
-        }
-    }
-
-    /* 부모 삭제 전에 컬렉션 로딩 + orphanRemoval 트리거 */
-    @PreRemove
-    private fun preRemove() {
-        // 컬렉션을 강제로 초기화하고 자식들을 orphan으로 만들어 DELETE 유도
-        _images.toList().forEach { _images.remove(it) }
-    }
-
-    fun refreshFromIngestion(
-        title: String? = null,
-        description: String? = null,
-        category: String? = null,
-        startAt: OffsetDateTime? = null,
-        endAt: OffsetDateTime? = null,
-        placeName: String? = null,
-        placeAddress: String? = null,
-        placeCity: String? = null,
-        placeDistrict: String? = null,
-        placeLatitude: Double? = null,
-        placeLongitude: Double? = null,
-        placePhone: String? = null,
-        placeHomepage: String? = null,
-        priceText: String? = null,
-        audience: String? = null,
-        contact: String? = null,
-        url: String? = null,
-        imageUrl: String? = null,
-        status: EventStatus? = null,
-        rawPayload: Map<String, Any>? = null,
-        ingestedAt: OffsetDateTime? = null
-    ) {
-        title?.let { this.title = it }
-        description?.let { this.description = it }
-        category?.let { this.category = it }
-        startAt?.let { this.startAt = it }
-        endAt?.let { this.endAt = it }
-
-        placeName?.let { this.placeName = it }
-        placeAddress?.let { this.placeAddress = it }
-        placeCity?.let { this.placeCity = it }
-        placeDistrict?.let { this.placeDistrict = it }
-        placeLatitude?.let { this.placeLatitude = it }
-        placeLongitude?.let { this.placeLongitude = it }
-        placePhone?.let { this.placePhone = it }
-        placeHomepage?.let { this.placeHomepage = it }
-
-        priceText?.let { this.priceText = it }
-        audience?.let { this.audience = it }
-        contact?.let { this.contact = it }
-        url?.let { this.url = it }
-        imageUrl?.let { this.imageUrl = it }
-        status?.let { this.status = it }
-
-        rawPayload?.let { this.rawPayload = it.toMutableMap() }
-        ingestedAt?.let { this.ingestedAt = it }
-    }
 }
