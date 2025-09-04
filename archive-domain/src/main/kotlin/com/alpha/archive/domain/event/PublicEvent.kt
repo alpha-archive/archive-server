@@ -156,11 +156,11 @@ class PublicEvent(
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     var status: EventStatus = status
-    protected set
+        protected set
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "raw_payload", nullable = false, columnDefinition = "jsonb")
-var rawPayload: MutableMap<String, Any> = rawPayload
+    var rawPayload: MutableMap<String, Any> = rawPayload
         protected set
 
     @Column(name = "ingested_at", nullable = false)
