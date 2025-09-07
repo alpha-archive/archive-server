@@ -15,11 +15,8 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.annotations.SQLDelete
-import org.hibernate.annotations.SQLRestriction
 import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
-
 
 @Entity
 @Table(
@@ -45,8 +42,6 @@ import java.time.LocalDateTime
         )
     ]
 )
-@SQLDelete(sql = "UPDATE public_event SET deleted_at = NOW() WHERE id = ?")
-@SQLRestriction("deleted_at IS NULL")
 class PublicEvent (
     source: String,
     sourceEventId: String,
@@ -126,7 +121,8 @@ class PublicEvent (
         orphanRemoval = true,
         fetch = FetchType.LAZY
     )
-    val images: MutableSet<EventImage> = mutableSetOf()
+    protected val mutableImages: MutableSet<EventImage> = mutableSetOf()
+    val images: Set<EventImage> get() = mutableImages.toSet()
 
 
     fun updateEvent(

@@ -8,10 +8,7 @@ import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import org.hibernate.annotations.SQLDelete
-import org.hibernate.annotations.SQLRestriction
 import java.time.LocalDateTime
-
 
 @Entity
 @Table(
@@ -26,9 +23,6 @@ import java.time.LocalDateTime
             columnList = "event_id, sort")
     ]
 )
-
-@SQLDelete(sql = "UPDATE event_image SET deleted_at = now() WHERE id = ?")
-@SQLRestriction("deleted_at IS NULL")
 class EventImage(
     event: PublicEvent,
     url: String,

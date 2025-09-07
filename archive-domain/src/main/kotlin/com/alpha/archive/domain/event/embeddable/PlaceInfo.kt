@@ -10,7 +10,7 @@ class PlaceInfo {
     var placeName: String? = null
 
     @Column(name = "place_address", length = 300)
-    var placeAdress: String? = null
+    var placeAddress: String? = null
 
     @Column(name = "place_city", length = 50)
     var placeCity: String? = null
