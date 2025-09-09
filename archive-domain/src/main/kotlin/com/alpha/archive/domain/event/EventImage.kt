@@ -8,6 +8,7 @@ import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import org.hibernate.annotations.SQLDelete
 import java.time.LocalDateTime
 
 @Entity
@@ -20,6 +21,7 @@ import java.time.LocalDateTime
         )
     ]
 )
+@SQLDelete(sql = "UPDATE event_images SET deleted_at = NOW() WHERE id = ?")
 class EventImage(
     event: PublicEvent,
     url: String,

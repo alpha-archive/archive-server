@@ -14,6 +14,7 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.annotations.SQLDelete
 import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 
@@ -21,6 +22,7 @@ import java.time.LocalDateTime
 @Table(
     name = "public_events"
 )
+@SQLDelete(sql = "UPDATE public_events SET deleted_at = NOW() WHERE id = ?")
 class PublicEvent (
     source: String,
     sourceEventId: String,
