@@ -4,20 +4,19 @@ import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 
 @Embeddable
-class AudienceMeta {
-
+data class AudienceMeta(
     @Column(name = "price_text", length = 200)
-    var priceText: String? = null
+    val priceText: String? = null,
 
     @Column(name = "audience", length = 80)
-    var audience: String? = null
+    val audience: String? = null,
 
     @Column(name = "contact", length = 100)
-    var contact: String? = null
+    val contact: String? = null,
 
     @Column(name = "url", length = 400)
-    var url: String? = null
+    val url: String? = null,
 
     @Column(name = "image_url", length = 400)
-    var imageUrl: String? = null
-}
+    val imageUrl: String? = null
+)

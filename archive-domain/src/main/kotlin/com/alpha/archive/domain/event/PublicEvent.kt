@@ -47,11 +47,11 @@ class PublicEvent (
     sourceEventId: String,
     title: String,
     description: String? = null,
-    category: String? = null,
+    category: EventCategory,
     startAt: LocalDateTime? = null,
     endAt: LocalDateTime? = null,
-    place: PlaceInfo = PlaceInfo(),
-    meta: AudienceMeta = AudienceMeta(),
+    place: PlaceInfo,
+    meta: AudienceMeta,
     status: PublicEventStatus = PublicEventStatus.ACTIVE,
     rawPayload: String,
     ingestedAt: LocalDateTime
@@ -73,8 +73,9 @@ class PublicEvent (
     var description: String? = description
         protected set
 
-    @Column(name = "category", length = 50)
-    var category: String? = category
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", length = 50, nullable = false)
+    var category: EventCategory = category
         protected set
 
     @Column(name = "start_at")
@@ -115,38 +116,8 @@ class PublicEvent (
         protected set
 
     // event_image 매핑
-    @OneToMany(
-        mappedBy = "event",
-        cascade = [CascadeType.ALL],
-        orphanRemoval = true,
-        fetch = FetchType.LAZY
-    )
+    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY)
     protected val mutableImages: MutableSet<EventImage> = mutableSetOf()
     val images: Set<EventImage> get() = mutableImages.toSet()
 
-    fun updateEvent(
-        title: String? = null,
-        description: String? = null,
-        category: String? = null,
-        startAt: LocalDateTime? = null,
-        endAt: LocalDateTime? = null,
-        place: PlaceInfo? = null,
-        meta: AudienceMeta? = null,
-        status: PublicEventStatus? = null,
-        rawPayload: String,
-        ingestedAt: LocalDateTime = LocalDateTime.now()
-    ) {
-        title?.let { this.title = it }
-        description?.let { this.description = it }
-        category?.let { this.category = it }
-        startAt?.let { this.startAt = it }
-        endAt?.let { this.endAt = it }
-        place?.let { this.place = it }
-        meta?.let { this.meta = it }
-        status?.let { this.status = it }
-
-        // 필수 갱신
-        this.rawPayload = rawPayload
-        this.ingestedAt = ingestedAt
-    }
 }
