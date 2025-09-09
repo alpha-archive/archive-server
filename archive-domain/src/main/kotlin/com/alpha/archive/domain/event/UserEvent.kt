@@ -31,7 +31,7 @@ import java.time.LocalDateTime
         )
     ]
 )
-@SQLDelete(sql = "UPDATE user_event SET deleted_at = NOW() WHERE id = ?")
+@SQLDelete(sql = "UPDATE user_events SET deleted_at = NOW() WHERE id = ?")
 class UserEvent(
     user: User,
     publicEvent: PublicEvent? = null,
