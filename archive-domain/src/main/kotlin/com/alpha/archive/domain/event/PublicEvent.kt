@@ -1,0 +1,104 @@
+package com.alpha.archive.domain.event
+
+import com.alpha.archive.domain.base.UlidPrimaryKeyEntity
+import com.alpha.archive.domain.event.embeddable.AudienceMeta
+import com.alpha.archive.domain.event.embeddable.PlaceInfo
+import com.alpha.archive.domain.event.enums.EventCategory
+import com.alpha.archive.domain.event.enums.PublicEventStatus
+import jakarta.persistence.Column
+import jakarta.persistence.Embedded
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
+import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.annotations.SQLDelete
+import org.hibernate.type.SqlTypes
+import java.time.LocalDateTime
+
+@Entity
+@Table(
+    name = "public_events"
+)
+@SQLDelete(sql = "UPDATE public_events SET deleted_at = NOW() WHERE id = ?")
+class PublicEvent (
+    source: String,
+    sourceEventId: String,
+    title: String,
+    description: String? = null,
+    category: EventCategory,
+    startAt: LocalDateTime? = null,
+    endAt: LocalDateTime? = null,
+    place: PlaceInfo,
+    meta: AudienceMeta,
+    status: PublicEventStatus = PublicEventStatus.ACTIVE,
+    rawPayload: String,
+    ingestedAt: LocalDateTime
+) : UlidPrimaryKeyEntity() {
+
+    @Column(name = "source", length = 50, nullable = false)
+    var source: String = source
+        protected set
+
+    @Column(name = "source_event_id", length = 128, nullable = false)
+    var sourceEventId: String = sourceEventId
+        protected set
+
+    @Column(name = "title", length = 300, nullable = false)
+    var title: String = title
+        protected set
+
+    @Column(name = "description", columnDefinition = "text")
+    var description: String? = description
+        protected set
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", length = 50, nullable = false)
+    var category: EventCategory = category
+        protected set
+
+    @Column(name = "start_at")
+    var startAt: LocalDateTime? = startAt
+        protected set
+
+    @Column(name = "end_at")
+    var endAt: LocalDateTime? = endAt
+        protected set
+
+    // 장소 관련
+    @Embedded
+    var place: PlaceInfo = place
+        protected set
+
+    // 관람 정보 관련
+    @Embedded
+    var meta: AudienceMeta = meta
+        protected set
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
+    var status: PublicEventStatus = status
+        protected set
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "raw_payload", columnDefinition = "jsonb", nullable = false)
+    var rawPayload: String = rawPayload
+        protected set
+
+    @Column(name = "ingested_at", nullable = false)
+    var ingestedAt: LocalDateTime = ingestedAt
+        protected set
+
+    /* 소프트 삭제 시각 */
+    @Column(name = "deleted_at")
+    var deletedAt: LocalDateTime? = null
+        protected set
+
+    // event_image 매핑
+    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY)
+    protected val mutableImages: MutableSet<EventImage> = mutableSetOf()
+    val images: Set<EventImage> get() = mutableImages.toSet()
+
+}

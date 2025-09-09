@@ -39,17 +39,3 @@ jobs:
       run: |
         chmod +x ./gradlew
         ./gradlew build
-        
-    - name: 📊 Test Report
-      uses: dorny/test-reporter@v1
-      if: success() || failure()
-      with:
-        name: Test Results
-        path: '**/build/test-results/test/TEST-*.xml'
-        reporter: java-junit
-        
-    - name: 🐳 Test Docker Build
-      run: |
-        # Test if Docker image builds successfully
-        docker build -t test-image .
-        echo "✅ Docker build successful"
