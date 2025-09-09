@@ -54,8 +54,8 @@ class PublicEvent (
     meta: AudienceMeta = AudienceMeta(),
     status: PublicEventStatus = PublicEventStatus.ACTIVE,
     rawPayload: String,
-    ingestedAt: LocalDateTime,
-    ) : UlidPrimaryKeyEntity() {
+    ingestedAt: LocalDateTime
+) : UlidPrimaryKeyEntity() {
 
     @Column(name = "source", length = 50, nullable = false)
     var source: String = source
@@ -123,7 +123,6 @@ class PublicEvent (
     )
     protected val mutableImages: MutableSet<EventImage> = mutableSetOf()
     val images: Set<EventImage> get() = mutableImages.toSet()
-
 
     fun updateEvent(
         title: String? = null,
