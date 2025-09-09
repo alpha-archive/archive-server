@@ -22,11 +22,11 @@ import java.time.LocalDateTime
     name = "user_events",
     indexes = [
         Index(
-            name = "idx_user_event_user_id",
+            name = "fk_user_event_user_id",
             columnList = "user_id"
         ),
         Index(
-            name = "idx_user_event_public_event_id",
+            name = "fk_user_event_public_event_id", 
             columnList = "public_event_id"
         )
     ]

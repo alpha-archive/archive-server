@@ -16,7 +16,7 @@ import java.time.LocalDateTime
     name = "user_event_images",
     indexes = [
         Index(
-            name = "idx_user_event_image_user_event_id",
+            name = "fk_user_event_image_user_event_id",
             columnList = "user_event_id"
         )
     ]
