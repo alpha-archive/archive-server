@@ -1,4 +1,4 @@
-package com.alpha.archive.domain.event
+package com.alpha.archive.domain.event.enums
 
 enum class EventCategory(val displayName: String) {
     MUSICAL("뮤지컬"),

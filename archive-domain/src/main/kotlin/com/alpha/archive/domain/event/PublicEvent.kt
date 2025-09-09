@@ -3,44 +3,23 @@ package com.alpha.archive.domain.event
 import com.alpha.archive.domain.base.UlidPrimaryKeyEntity
 import com.alpha.archive.domain.event.embeddable.AudienceMeta
 import com.alpha.archive.domain.event.embeddable.PlaceInfo
-import jakarta.persistence.CascadeType
+import com.alpha.archive.domain.event.enums.EventCategory
+import com.alpha.archive.domain.event.enums.PublicEventStatus
 import jakarta.persistence.Column
 import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
-import jakarta.persistence.Index
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
-import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 
 @Entity
 @Table(
-    name = "public_event",
-    uniqueConstraints = [
-        UniqueConstraint(
-            name = "uk_public_event_source_source_event_id",
-            columnNames = ["source", "source_event_id"],
-        )
-    ],
-    indexes = [
-        Index(
-            name = "idx_public_event_status",
-            columnList = "status"
-        ),
-        Index(
-            name = "idx_public_event_start_at",
-            columnList = "start_at"
-        ),
-        Index(
-            name = "idx_public_event_area",
-            columnList = "place_city, place_district"
-        )
-    ]
+    name = "public_events"
 )
 class PublicEvent (
     source: String,

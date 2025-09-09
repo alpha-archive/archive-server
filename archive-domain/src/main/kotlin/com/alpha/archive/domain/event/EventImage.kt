@@ -12,21 +12,17 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(
-    name = "event_image",
+    name = "event_images",
     indexes = [
         Index(
             name = "idx_event_image_event_id",
             columnList = "event_id"
-        ),
-        Index(
-            name = "idx_event_image_event_id_sort",
-            columnList = "event_id, sort")
+        )
     ]
 )
 class EventImage(
     event: PublicEvent,
     url: String,
-    sort: Int = 0,
     ingestedAt: LocalDateTime,
 ) : UlidPrimaryKeyEntity() {
 
@@ -39,10 +35,6 @@ class EventImage(
     var url: String = url
         protected set
 
-    @Column(name = "sort", nullable = false)
-    var sort: Int = sort
-        protected set
-
     @Column(name = "ingested_at", nullable = false)
     var ingestedAt: LocalDateTime = ingestedAt
         protected set
@@ -52,14 +44,4 @@ class EventImage(
     var deletedAt: LocalDateTime? = null
         protected set
 
-
-    fun updateImageInfo(
-        url: String? = null,
-        sort: Int? = null,
-        ingestedAt: LocalDateTime = LocalDateTime.now()
-    ) {
-        url?.let { this.url = it }
-        sort?.let { this.sort = it }
-        this.ingestedAt = ingestedAt
-    }
 }

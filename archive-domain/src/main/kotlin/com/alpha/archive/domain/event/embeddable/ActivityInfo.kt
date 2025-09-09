@@ -1,6 +1,6 @@
 package com.alpha.archive.domain.event.embeddable
 
-import com.alpha.archive.domain.event.EventCategory
+import com.alpha.archive.domain.event.enums.EventCategory
 import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EnumType

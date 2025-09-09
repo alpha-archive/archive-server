@@ -19,7 +19,7 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(
-    name = "user_event",
+    name = "user_events",
     indexes = [
         Index(
             name = "idx_user_event_user_id",

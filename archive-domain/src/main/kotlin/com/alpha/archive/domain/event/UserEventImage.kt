@@ -13,7 +13,7 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(
-    name = "user_event_image",
+    name = "user_event_images",
     indexes = [
         Index(
             name = "idx_user_event_image_user_event_id",
