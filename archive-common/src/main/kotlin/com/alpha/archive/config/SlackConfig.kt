@@ -20,6 +20,7 @@ class SlackConfig {
         if (slackBotToken.isBlank()) {
             throw IllegalStateException("Slack Bot Token이 설정되지 않았습니다. slack.bot.token 속성을 확인해주세요.")
         }
+        
         return Slack.getInstance().methods(slackBotToken)
     }
 
