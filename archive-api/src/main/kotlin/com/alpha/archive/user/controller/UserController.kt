@@ -4,6 +4,8 @@ import com.alpha.archive.auth.security.service.ArchiveUserDetails
 import com.alpha.archive.user.dto.response.UserInfoResponse
 import com.alpha.archive.common.annotations.ArchiveGetMapping
 import com.alpha.archive.common.dto.ApiResponse
+import com.alpha.archive.exception.ApiException
+import com.alpha.archive.exception.ErrorTitle
 import com.alpha.archive.user.service.UserService
 import com.alpha.archive.util.ResponseUtil
 import io.swagger.v3.oas.annotations.Operation
@@ -12,6 +14,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -22,6 +25,11 @@ import org.springframework.web.bind.annotation.RestController
 class UserController(
     private val userService: UserService
 ) {
+
+    @GetMapping("/test")
+    fun test() {
+        throw ApiException(ErrorTitle.InternalServerError)
+    }
 
     @ArchiveGetMapping("/me", authenticated = true)
     @SwaggerApiResponse(responseCode = "200", description = "사용자 정보 조회 성공")

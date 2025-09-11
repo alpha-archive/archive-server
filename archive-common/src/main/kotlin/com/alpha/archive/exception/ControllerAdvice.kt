@@ -54,7 +54,6 @@ class ControllerAdvice(
         exception: Exception,
         statusCode: Int
     ) {
-        // ExternalServerError (500) 또는 500대 에러인 경우 Slack 알림 전송
         if (statusCode >= 500 || isExternalServerError(exception)) {
             try {
                 val errorInfo = RequestUtil.createErrorInfo(
