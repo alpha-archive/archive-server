@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ncp-object-storage-config
+  namespace: archive
+data:
+  NCP_BUCKET_NAME: "archive-image-storage"

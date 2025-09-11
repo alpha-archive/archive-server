@@ -17,6 +17,13 @@ dependencies {
     
     // Slack SDK
     api("com.slack.api:slack-api-client:1.42.0")
+    
+    // AWS SDK for NCP Object Storage (S3 compatible)
+    api("software.amazon.awssdk:s3:2.20.26")
+    api("software.amazon.awssdk:auth:2.20.26")
+    
+    // ULID
+    api("com.github.f4b6a3:ulid-creator:5.2.3")
 }
 
 tasks.named<BootJar>("bootJar") {
