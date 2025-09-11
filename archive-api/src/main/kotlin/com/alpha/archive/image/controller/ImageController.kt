@@ -10,9 +10,6 @@ import com.alpha.archive.image.service.ImageService
 import com.alpha.archive.util.ResponseUtil
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.media.Content
-import io.swagger.v3.oas.annotations.media.Schema
-import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -41,18 +38,11 @@ class ImageController(
         summary = "이미지 파일 업로드",
         description = "이미지 파일을 NCP Object Storage에 업로드합니다. 지원 형식: JPEG, JPG, PNG, GIF, WEBP (최대 10MB)"
     )
-    @RequestBody(
-        content = [Content(
-            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-            schema = Schema(type = "object")
-        )]
-    )
     fun uploadImage(
         @AuthenticationPrincipal userDetails: ArchiveUserDetails,
         @Parameter(
             description = "업로드할 이미지 파일",
-            required = true,
-            content = [Content(mediaType = "multipart/form-data")]
+            required = true
         )
         @RequestParam("file") file: MultipartFile
     ): ResponseEntity<ApiResponse.Success<ImageUploadResponse>> {
