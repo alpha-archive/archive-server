@@ -6,18 +6,26 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-/**
- * Slack 설정
- */
 @Configuration
 class SlackConfig {
 
-    @Value("\${slack.webhook.url:}")
-    private lateinit var slackWebhookUrl: String
+    @Value("\${slack.bot.token}")
+    private lateinit var slackBotToken: String
+
+    @Value("\${slack.bot.channel:#백엔드_에러알림}")
+    private lateinit var slackChannel: String
 
     @Bean
-    fun slack(): Slack = Slack.getInstance()
+    fun slackMethodsClient(): MethodsClient {
+        if (slackBotToken.isBlank()) {
+            throw IllegalStateException("Slack Bot Token이 설정되지 않았습니다. slack.bot.token 속성을 확인해주세요.")
+        }
+        return Slack.getInstance().methods(slackBotToken)
+    }
 
     @Bean
-    fun slackWebhookUrl(): String = slackWebhookUrl
+    fun slackBotToken(): String = slackBotToken
+
+    @Bean
+    fun slackChannel(): String = slackChannel
 }

@@ -36,8 +36,9 @@ springdoc:
     path: /swagger-ui.html
 
 slack:
-  webhook:
-    url: https://hooks.slack.com/services/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
+  bot:
+    token: ${SLACK_BOT_TOKEN}
+    channel: "#백엔드_에러알림"
 
 ncp:
   object-storage:

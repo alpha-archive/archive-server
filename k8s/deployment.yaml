@@ -19,7 +19,7 @@ spec:
       - name: ncp-registry-secret
       containers:
       - name: archive-api
-        image: archive-cr.kr.ncr.ntruss.com/archive-api:v3
+        image: archive-cr.kr.ncr.ntruss.com/archive-api:v-16
         ports:
         - containerPort: 8080
         env:
@@ -56,6 +56,16 @@ spec:
             configMapKeyRef:
               name: ncp-object-storage-config
               key: NCP_BUCKET_NAME
+        - name: SLACK_BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: slack-secret
+              key: SLACK_BOT_TOKEN
+        - name: SLACK_CHANNEL
+          valueFrom:
+            secretKeyRef:
+              name: slack-secret
+              key: SLACK_CHANNEL
         resources:
           requests:
             memory: "256Mi"

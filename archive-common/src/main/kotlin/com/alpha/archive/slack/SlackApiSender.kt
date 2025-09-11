@@ -1,68 +1,72 @@
 package com.alpha.archive.slack
 
 import com.alpha.archive.slack.dto.ErrorInfo
-import com.slack.api.Slack
 import com.slack.api.methods.MethodsClient
 import com.slack.api.methods.request.chat.ChatPostMessageRequest
-import com.slack.api.model.block.LayoutBlock
-import com.slack.api.model.block.SectionBlock
-import com.slack.api.model.block.composition.MarkdownTextObject
-import com.slack.api.webhook.Payload
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.core.task.TaskExecutor
 import org.springframework.stereotype.Component
-import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 /**
- * Slack SDK를 사용한 에러 알림 전송자
+ * Slack Bot Token API를 사용한 보안 에러 알림 전송자
+ * Webhook보다 더 안전한 Bot Token만 사용
  */
 @Component
 class SlackApiSender(
-    private val slack: Slack,
-    private val slackWebhookUrl: String,
+    private val slackMethodsClient: MethodsClient,
+    private val slackBotToken: String,
+    private val slackChannel: String,
     @Qualifier("slackTaskExecutor") private val taskExecutor: TaskExecutor,
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(SlackApiSender::class.java)
-        private const val DEFAULT_CHANNEL = "#백엔드_에러알림"
     }
 
     fun sendErrorNotification(errorInfo: ErrorInfo) {
         taskExecutor.execute {
-            sendViaWebhook(errorInfo)
+            sendViaBotApi(errorInfo)
         }
     }
 
-    private fun sendViaWebhook(errorInfo: ErrorInfo) {
-        if (slackWebhookUrl.isBlank()) {
-            logger.warn("Slack webhook URL이 설정되지 않아 알림을 전송하지 않습니다.")
-            return
-        }
-
+    /**
+     * Bot Token API를 사용하여 메시지 전송 (보안 강화)
+     */
+    private fun sendViaBotApi(errorInfo: ErrorInfo) {
         try {
-            val payload = createOptimizedErrorPayload(errorInfo)
-            val response = slack.send(slackWebhookUrl, payload)
-
-            if (response.code == 200) {
-                logger.info("Slack 웹훅 알림 전송 완료: ${errorInfo.httpMethod} ${errorInfo.requestUri}")
+            val message = createErrorMessage(errorInfo)
+            
+            val request = ChatPostMessageRequest.builder()
+                .channel(slackChannel)
+                .text(message)
+                .build()
+            
+            val response = slackMethodsClient.chatPostMessage(request)
+            
+            if (response.isOk) {
+                logger.info("💬 Slack Bot API 알림 전송 완료: ${errorInfo.httpMethod} ${errorInfo.requestUri}")
             } else {
-                val errorMessage = when (response.body) {
-                    "invalid_token" -> "유효하지 않은 Slack 웹훅 토큰입니다."
-                    "channel_not_found" -> "Slack 채널을 찾을 수 없습니다."
-                    else -> response.body
+                val errorMessage = when (response.error) {
+                    "invalid_auth" -> "유효하지 않은 Slack Bot 토큰입니다. 토큰을 확인해주세요."
+                    "channel_not_found" -> "Slack 채널을 찾을 수 없습니다: $slackChannel"
+                    "not_in_channel" -> "Bot이 해당 채널에 초대되지 않았습니다: $slackChannel. /invite @bot-name 으로 초대해주세요."
+                    "missing_scope" -> "Bot에 필요한 권한이 없습니다. chat:write 권한을 추가해주세요."
+                    else -> response.error
                 }
-                logger.error("Slack 웹훅 실패: ${response.code} - $errorMessage")
+                logger.error("❌ Slack Bot API 실패: $errorMessage")
             }
         } catch (e: Exception) {
-            logger.error("Slack 웹훅 에러", e)
+            logger.error("❌ Slack Bot API 에러", e)
         }
     }
 
-    private fun createOptimizedErrorPayload(errorInfo: ErrorInfo): Payload {
+    /**
+     * Bot API용 간단한 텍스트 메시지 생성
+     */
+    private fun createErrorMessage(errorInfo: ErrorInfo): String {
         val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
         val errorIcon = when {
             errorInfo.statusCode >= 500 -> "🚨"
@@ -70,7 +74,7 @@ class SlackApiSender(
             else -> "❌"
         }
 
-        val message = buildString {
+        return buildString {
             appendLine("$errorIcon **Archive API 에러 발생**")
             appendLine("**시간:** $timestamp")
             appendLine("**상태 코드:** ${errorInfo.statusCode}")
@@ -96,10 +100,6 @@ class SlackApiSender(
                 }
             }
         }
-
-        return Payload.builder()
-            .text(message)
-            .build()
     }
 
     /**
