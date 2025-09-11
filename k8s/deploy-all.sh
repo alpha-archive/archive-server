@@ -15,7 +15,12 @@ echo "🔴 Deploying Redis..."
 kubectl apply -f redis-deployment.yaml
 kubectl apply -f redis-service.yaml
 
-# 3. Archive API 배포
+# 3. NCP Object Storage 설정 배포
+echo "☁️  Deploying NCP Object Storage config..."
+kubectl apply -f ncp-object-storage-configmap.yaml
+kubectl apply -f ncp-object-storage-secret.yaml
+
+# 4. Archive API 배포
 echo "🛠️  Deploying Archive API..."
 kubectl apply -f deployment.yaml
 kubectl apply -f service.yaml

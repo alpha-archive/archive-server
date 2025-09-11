@@ -1,5 +1,6 @@
 package com.alpha.archive.user.service
 
+import com.alpha.archive.domain.user.User
 import com.alpha.archive.domain.user.UserRepository
 import com.alpha.archive.user.dto.response.UserInfoResponse
 import com.alpha.archive.exception.ApiException
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service
 
 interface UserService {
     fun getUserById(userId: String): UserInfoResponse
+    fun getUserEntityById(userId: String): User
 }
 
 @Service
@@ -26,4 +28,6 @@ class UserServiceImpl(
             profileImageUrl = user.profileImageUrl
         )
     }
+
+    override fun getUserEntityById(userId: String): User = userRepository.findByIdOrNull(userId) ?: throw ApiException(ErrorTitle.NotFoundUser)
 }

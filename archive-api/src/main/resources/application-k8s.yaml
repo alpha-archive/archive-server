@@ -38,4 +38,23 @@ springdoc:
 
 slack:
   webhook:
-    url: https://hooks.slack.com/services/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
+    url: https://hooks.slack.com/services/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
+
+ncp:
+  object-storage:
+    endpoint: https://kr.object.ncloudstorage.com
+    region: kr-standard
+    access-key: ${NCP_ACCESS_KEY}
+    secret-key: ${NCP_SECRET_KEY}
+    bucket-name: ${NCP_BUCKET_NAME}
+
+logging:
+  level:
+    org.springframework: INFO  # k8s에서는 INFO 레벨로 설정 (성능 고려)
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    org.springframework.web.servlet: WARN
+    org.springframework.web.multipart: WARN
+    org.springframework.web.bind: WARN
+    com.alpha.archive: DEBUG  # 애플리케이션 로그는 DEBUG 유지
+    root: INFO

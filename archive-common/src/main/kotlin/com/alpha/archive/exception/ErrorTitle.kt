@@ -32,6 +32,7 @@ enum class ErrorTitle(val status: HttpStatus, val message: String) {
     // 404 Not Found
     NotFoundEndpoint(HttpStatus.NOT_FOUND, "존재 하지 않는 엔드포인트 입니다."),
     NotFoundUser(HttpStatus.NOT_FOUND, "존재하지 않는 사용자입니다."),
+    NotFoundImage(HttpStatus.NOT_FOUND, "존재하지 않는 이미지 파일입니다."),
     
     // 405 Method Not Allowed
     MethodNotAllowed(HttpStatus.METHOD_NOT_ALLOWED, "허용되지 않은 메소드입니다."),

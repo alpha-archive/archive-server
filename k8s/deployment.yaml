@@ -40,6 +40,22 @@ spec:
             secretKeyRef:
               name: postgresql-secret
               key: POSTGRES_PASSWORD
+        # NCP Object Storage 설정
+        - name: NCP_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ncp-object-storage-secret
+              key: NCP_ACCESS_KEY
+        - name: NCP_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ncp-object-storage-secret
+              key: NCP_SECRET_KEY
+        - name: NCP_BUCKET_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: ncp-object-storage-config
+              key: NCP_BUCKET_NAME
         resources:
           requests:
             memory: "256Mi"
