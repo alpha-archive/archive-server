@@ -1,7 +1,7 @@
 package com.alpha.archive.image.service
 
 import com.alpha.archive.domain.event.UserEventImage
-import com.alpha.archive.domain.event.UserEventImageRepository
+import com.alpha.archive.domain.event.repository.UserEventImageRepository
 import com.alpha.archive.domain.event.enums.UserEventImageStatus
 import com.alpha.archive.exception.ApiException
 import com.alpha.archive.exception.ErrorTitle
