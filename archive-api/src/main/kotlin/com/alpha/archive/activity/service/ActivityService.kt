@@ -49,7 +49,13 @@ class ActivityServiceImpl(
         }
         
         // 4. ActivityInfo 생성 (공공/개인 데이터 결합)
-        val activityInfo = createActivityInfo(request, publicEvent)
+        val activityInfo = ActivityInfo(
+            customTitle = request.title,
+            customCategory = request.category,
+            customLocation = request.location,
+            rating = request.rating,
+            memo = request.memo
+        )
         
         // 5. UserEvent 생성 및 저장
         val userEvent = UserEvent(
@@ -65,31 +71,7 @@ class ActivityServiceImpl(
             linkImagesToUserEvent(userId, imageIds, savedUserEvent)
         }
     }
-    
-    /**
-     * ActivityInfo 생성 - 공공 활동 데이터와 개인 입력 데이터를 결합
-     */
-    private fun createActivityInfo(request: UserActivityRequest, publicEvent: PublicEvent?): ActivityInfo {
-        return if (publicEvent != null) {
-            // 공공 활동: PublicEvent 데이터를 우선 사용하고, 개인 입력으로 오버라이드
-            ActivityInfo(
-                customTitle = request.title,
-                customCategory = request.category,
-                customLocation = request.location,
-                rating = request.rating,
-                memo = request.memo
-            )
-        } else {
-            // 개인 활동: 모든 데이터가 개인 입력
-            ActivityInfo(
-                customTitle = request.title,
-                customCategory = request.category,
-                customLocation = request.location,
-                rating = request.rating,
-                memo = request.memo
-            )
-        }
-    }
+
     
     /**
      * TEMP 상태의 이미지들을 UserEvent와 연결
