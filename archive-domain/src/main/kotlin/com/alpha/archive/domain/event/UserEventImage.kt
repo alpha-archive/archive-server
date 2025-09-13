@@ -72,4 +72,12 @@ class UserEventImage(
     var deletedAt: LocalDateTime? = null
         protected set
 
+    /**
+     * UserEvent와 연결하고 상태를 LINKED로 변경
+     */
+    fun linkToUserEvent(userEvent: UserEvent) {
+        this.userEvent = userEvent
+        this.status = UserEventImageStatus.LINKED
+    }
+
 }
