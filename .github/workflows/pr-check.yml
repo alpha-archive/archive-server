@@ -19,8 +19,9 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: archive_test
+          POSTGRES_DB: archive
+          POSTGRES_USER: archive_user
+          POSTGRES_PASSWORD: archive_password
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -28,6 +29,16 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
 
     steps:
       - name: 📥 Checkout code
@@ -50,10 +61,6 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: 🔨 Build and Test
-        env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/archive_test
-          SPRING_DATASOURCE_USERNAME: postgres
-          SPRING_DATASOURCE_PASSWORD: postgres
         run: |
           chmod +x ./gradlew
           ./gradlew clean build
