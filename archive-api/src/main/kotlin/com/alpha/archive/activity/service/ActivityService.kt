@@ -73,18 +73,18 @@ class ActivityServiceImpl(
         return if (publicEvent != null) {
             // 공공 활동: PublicEvent 데이터를 우선 사용하고, 개인 입력으로 오버라이드
             ActivityInfo(
-                customTitle = request.customTitle ?: publicEvent.title,
-                customCategory = request.customCategory ?: publicEvent.category,
-                customLocation = request.customLocation ?: publicEvent.place.placeAddress,
+                customTitle = request.title,
+                customCategory = request.category,
+                customLocation = request.location,
                 rating = request.rating,
                 memo = request.memo
             )
         } else {
             // 개인 활동: 모든 데이터가 개인 입력
             ActivityInfo(
-                customTitle = request.customTitle, // validateForPersonalActivity()에서 검증됨
-                customCategory = request.customCategory!!, // validateForPersonalActivity()에서 검증됨
-                customLocation = request.customLocation,
+                customTitle = request.title,
+                customCategory = request.category,
+                customLocation = request.location,
                 rating = request.rating,
                 memo = request.memo
             )

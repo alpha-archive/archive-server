@@ -10,19 +10,19 @@ import java.time.LocalDateTime
 @Schema(description = "사용자 활동 기록 요청")
 data class UserActivityRequest(
     @field:Schema(
-        description = "활동 제목 (공공 활동인 경우 선택사항, 개인 활동인 경우 필수)", 
+        description = "활동 제목",
         example = "해리포터 뮤지컬 관람", 
-        nullable = true
+        nullable = false
     )
     @field:Size(max = 300, message = "활동 제목은 300자 이내로 입력해주세요.")
-    val customTitle: String? = null,
+    val title: String,
 
-    @field:Schema(description = "활동 카테고리 (공공 활동인 경우 선택사항, 개인 활동인 경우 필수)", example = "MUSICAL", nullable = true)
-    val customCategory: EventCategory? = null,
+    @field:Schema(description = "활동 카테고리 (공공 활동인 경우 선택사항, 개인 활동인 경우 필수)", example = "MUSICAL", nullable = false)
+    val category: EventCategory,
 
-    @field:Schema(description = "활동 장소 (공공 활동인 경우 선택사항)", example = "충무아트센터 대극장", nullable = true)
+    @field:Schema(description = "활동 장소 (공공 활동인 경우 선택사항)", example = "충무아트센터 대극장", nullable = false)
     @field:Size(max = 200, message = "활동 장소는 200자 이내로 입력해주세요.")
-    val customLocation: String? = null,
+    val location: String,
 
     @field:Schema(description = "활동 날짜 (필수)", example = "2024-01-15T19:30:00", nullable = false)
     @field:NotNull(message = "활동 날짜는 필수입니다.")
@@ -51,11 +51,8 @@ data class UserActivityRequest(
      */
     fun validateForPersonalActivity() {
         if (publicEventId == null) {
-            if (customTitle.isNullOrBlank()) {
+            if (title.isBlank()) {
                 throw ApiException(ErrorTitle.BadRequest, "개인 활동의 경우 활동 제목은 필수입니다.")
-            }
-            if (customCategory == null) {
-                throw ApiException(ErrorTitle.BadRequest, "개인 활동의 경우 활동 카테고리는 필수입니다.")
             }
         }
     }

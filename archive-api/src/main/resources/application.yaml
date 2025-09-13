@@ -13,7 +13,7 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -37,7 +37,7 @@ springdoc:
 
 slack:
   bot:
-    token: ${SLACK_BOT_TOKEN}
+    token: eG94Yi05MTU2MTU5NTkxMDI4LTk0OTg1ODEyNTgxMTQtTFh0WVRXS096aFBGSXpobE9YSkpNOXE5
     channel: "#백엔드_에러알림"
 
 ncp:
