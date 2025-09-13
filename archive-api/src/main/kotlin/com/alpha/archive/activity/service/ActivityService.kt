@@ -72,7 +72,7 @@ class ActivityServiceImpl(
         }
     }
 
-    
+
     /**
      * TEMP 상태의 이미지들을 UserEvent와 연결
      */
