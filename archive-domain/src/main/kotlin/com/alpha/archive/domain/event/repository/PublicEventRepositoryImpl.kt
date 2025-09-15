@@ -1,0 +1,90 @@
+package com.alpha.archive.domain.event.repository
+
+import com.alpha.archive.domain.event.PublicEvent
+import com.alpha.archive.domain.event.QPublicEvent
+import com.querydsl.core.BooleanBuilder
+import com.querydsl.jpa.impl.JPAQueryFactory
+import org.springframework.stereotype.Repository
+
+@Repository
+class PublicEventRepositoryImpl(
+    private val queryFactory: JPAQueryFactory
+) : PublicEventRepositoryCustom {
+
+    companion object {
+        private val publicEvent = QPublicEvent.publicEvent
+    }
+
+    override fun findRecommendedActivitiesWithCursor(
+        cursor: String?,
+        size: Int,
+        locationFilter: String?,
+        titleFilter: String?
+    ): List<PublicEvent> {
+        val whereCondition = buildBaseCondition(locationFilter, titleFilter)
+
+        cursor?.let {
+            whereCondition.and(publicEvent.id.lt(it))
+        }
+
+        return queryFactory
+            .selectFrom(publicEvent)
+            .where(whereCondition)
+            .orderBy(publicEvent.id.desc())
+            .limit(size.toLong())
+            .fetch()
+    }
+
+    override fun countRecommendedActivities(
+        locationFilter: String?,
+        titleFilter: String?
+    ): Long {
+        val whereCondition = buildBaseCondition(locationFilter, titleFilter)
+
+        val query = queryFactory
+            .select(publicEvent.countDistinct())
+            .from(publicEvent)
+            .where(whereCondition)
+            .fetchOne() ?: 0L
+
+        println("Generated SQL: ${query}")
+
+        return query
+    }
+
+    /**
+     * 기본 조건(소프트 삭제, 지역 필터, 제목 필터)을 빌드합니다.
+     */
+    private fun buildBaseCondition(
+        locationFilter: String?,
+        titleFilter: String?
+    ): BooleanBuilder {
+        return BooleanBuilder().apply {
+            // 소프트 삭제되지 않은 것만
+            and(publicEvent.deletedAt.isNull)
+
+            // 지역 필터 적용
+            locationFilter?.let { location ->
+                and(buildLocationCondition(location))
+            }
+
+            // 제목 필터 적용
+            titleFilter?.let { title ->
+                and(publicEvent.title.containsIgnoreCase(title))
+            }
+        }
+    }
+
+    /**
+     * 지역 관련 필터 조건을 빌드합니다.
+     * 장소명, 주소, 도시, 구/군에서 검색합니다.
+     */
+    private fun buildLocationCondition(location: String): BooleanBuilder {
+        return BooleanBuilder().apply {
+            or(publicEvent.place.placeName.containsIgnoreCase(location))
+            or(publicEvent.place.placeAddress.containsIgnoreCase(location))
+            or(publicEvent.place.placeCity.containsIgnoreCase(location))
+            or(publicEvent.place.placeDistrict.containsIgnoreCase(location))
+        }
+    }
+}
