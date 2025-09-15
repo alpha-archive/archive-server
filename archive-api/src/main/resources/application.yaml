@@ -40,12 +40,18 @@ slack:
     token: eG94Yi05MTU2MTU5NTkxMDI4LTk0OTg1ODEyNTgxMTQtTFh0WVRXS096aFBGSXpobE9YSkpNOXE5
     channel: "#백엔드_에러알림"
 
+public-data:
+  culture:
+    service-key: HuqWXa86MOyQLSZlypgRBpo4lU9FQN%2BC%2Bbm7Q62xcyu%2FUEQCFQwunEVPXNGqzrZMUOjfCLA%2BEuYmI31%2B4kJwGg%3D%3D
+  cultural:
+    service-key: a8d02a11-57ef-4048-a763-fd696ee95eee
+
 ncp:
   object-storage:
     endpoint: https://kr.object.ncloudstorage.com
     region: kr-standard
-    access-key: '채우세용' ## 네이버 클라우드 액세스 키
-    secret-key: '채우세용' ## 네이버 클라우드 시크릿 키
+    access-key: ncp_iam_BPASKR4uqmPXXLAI5Dhu
+    secret-key: ncp_iam_BPKSKRF3qJYVqPA4OhNxnk8dNv0XHPDN5M
     bucket-name: archive-image-storage
 
 logging:

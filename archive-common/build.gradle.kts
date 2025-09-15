@@ -8,9 +8,14 @@ dependencies {
     
     // Jackson
     api("com.fasterxml.jackson.module:jackson-module-kotlin")
+    api("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
     
     // Kotlin
     api("org.jetbrains.kotlin:kotlin-reflect")
+    
+    // Coroutines
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
     
     // Swagger
     api("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
