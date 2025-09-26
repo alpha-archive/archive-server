@@ -8,4 +8,17 @@ import org.springframework.data.repository.query.Param
 import java.time.LocalDateTime
 
 interface UserEventRepository : JpaRepository<UserEvent, String>, UserEventCustomRepository {
+    @Query("""
+        SELECT ue FROM UserEvent ue 
+        WHERE ue.user.id = :userId 
+        AND ue.activityDate >= :startDate 
+        AND ue.activityDate <= :endDate 
+        AND ue.deletedAt IS NULL
+        ORDER BY ue.activityDate DESC
+    """)
+    fun findByUserIdAndActivityDateBetween(
+        @Param("userId") userId: String,
+        @Param("startDate") startDate: LocalDateTime,
+        @Param("endDate") endDate: LocalDateTime
+    ): List<UserEvent>
 }
