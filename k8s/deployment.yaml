@@ -19,7 +19,7 @@ spec:
       - name: ncp-registry-secret
       containers:
       - name: archive-api
-        image: archive-cr.kr.ncr.ntruss.com/archive-api:v-20
+        image: archive-cr.kr.ncr.ntruss.com/archive-api:v-21
         ports:
         - containerPort: 8080
         env:
