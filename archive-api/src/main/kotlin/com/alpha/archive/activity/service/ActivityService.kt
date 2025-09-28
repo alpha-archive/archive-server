@@ -1,11 +1,14 @@
 package com.alpha.archive.activity.service
 
 import com.alpha.archive.activity.dto.request.UserActivityRequest
+import com.alpha.archive.activity.dto.request.UpdateActivityRequest
+import com.alpha.archive.activity.dto.response.ActivityDetailResponse
+import com.alpha.archive.activity.dto.response.ActivityResponse
 import com.alpha.archive.activity.dto.response.CategoryStatisticResponse
 import com.alpha.archive.activity.dto.response.DayStatisticResponse
+import com.alpha.archive.activity.dto.response.MonthlyActivityStatisticsResponse
 import com.alpha.archive.activity.dto.response.WeekStatisticResponse
 import com.alpha.archive.activity.dto.response.WeeklyActivityStatisticsResponse
-import com.alpha.archive.activity.dto.response.MonthlyActivityStatisticsResponse
 import com.alpha.archive.activity.util.ActivityPeriodCalculator
 import com.alpha.archive.domain.event.UserEvent
 import com.alpha.archive.domain.event.embeddable.ActivityInfo
@@ -25,6 +28,10 @@ interface ActivityService {
     fun createUserActivity(userId: String, request: UserActivityRequest)
     fun getWeeklyActivityStatistics(userId: String): WeeklyActivityStatisticsResponse
     fun getMonthlyActivityStatistics(userId: String): MonthlyActivityStatisticsResponse
+    fun getUserActivities(userId: String): List<ActivityResponse>
+    fun getUserActivityDetail(userId: String, activityId: String): ActivityDetailResponse
+    fun updateUserActivity(userId: String, activityId: String, request: UpdateActivityRequest): ActivityDetailResponse
+    fun deleteUserActivity(userId: String, activityId: String)
 }
 
 @Service
@@ -193,7 +200,7 @@ class ActivityServiceImpl(
             val dayOfMonth = activity.activityDate.dayOfMonth
             ((dayOfMonth - 1) / 7) + 1
         }
-        .mapValues { it.value.size }
+        .mapValues { it.value.size         }
         .let { activityCountByWeek ->
             (1..5).map { weekOfMonth ->
                 WeekStatisticResponse(
@@ -202,4 +209,103 @@ class ActivityServiceImpl(
                 )
             }.filter { it.count > 0 || it.weekOfMonth <= 4 }
         }
+
+    /**
+     * 사용자의 활동 리스트 페이징 조회
+     */
+    override fun getUserActivities(userId: String):  List<ActivityResponse> {
+        userService.getUserEntityById(userId)
+        
+        val userEvents = userEventRepository.findByUserIdAndDeletedAtIsNull(userId)
+        
+         return userEvents.map { ActivityResponse.from(it) }
+    }
+
+    /**
+     * 사용자의 활동 상세 조회
+     */
+    override fun getUserActivityDetail(userId: String, activityId: String): ActivityDetailResponse {
+        userService.getUserEntityById(userId)
+        
+        val userEvent = userEventRepository.findByIdAndUserIdAndDeletedAtIsNull(activityId, userId)
+            ?: throw ApiException(ErrorTitle.NotFoundUserEvent)
+        
+        return ActivityDetailResponse.from(userEvent)
+    }
+
+    /**
+     * 사용자의 활동 수정
+     */
+    @Transactional
+    override fun updateUserActivity(userId: String, activityId: String, request: UpdateActivityRequest): ActivityDetailResponse {
+        userService.getUserEntityById(userId)
+        
+        val userEvent = userEventRepository.findByIdAndUserIdAndDeletedAtIsNull(activityId, userId)
+            ?: throw ApiException(ErrorTitle.NotFoundUserEvent)
+        
+        val updatedActivityInfo = userEvent.activityInfo.copy(
+            customTitle = request.title ?: userEvent.activityInfo.customTitle,
+            customCategory = request.category ?: userEvent.activityInfo.customCategory,
+            customLocation = request.location ?: userEvent.activityInfo.customLocation,
+            rating = request.rating ?: userEvent.activityInfo.rating,
+            memo = request.memo ?: userEvent.activityInfo.memo
+        )
+        
+        userEvent.updateActivityInfo(updatedActivityInfo)
+        
+        request.activityDate?.let { userEvent.updateActivityDate(it) }
+        
+        request.addImageIds?.takeIf { it.isNotEmpty() }?.let { addImageIds ->
+            linkImagesToUserEvent(userId, addImageIds, userEvent)
+        }
+        
+        request.removeImageIds?.takeIf { it.isNotEmpty() }?.let { removeImageIds ->
+            unlinkImagesFromUserEvent(userId, removeImageIds, userEvent)
+        }
+        
+        val savedUserEvent = userEventRepository.save(userEvent)
+        return ActivityDetailResponse.from(savedUserEvent)
+    }
+
+    /**
+     * 사용자의 활동 삭제 (소프트 삭제)
+     */
+    @Transactional
+    override fun deleteUserActivity(userId: String, activityId: String) {
+        userService.getUserEntityById(userId)
+        
+        val userEvent = userEventRepository.findByIdAndUserIdAndDeletedAtIsNull(activityId, userId)
+            ?: throw ApiException(ErrorTitle.NotFoundUserEvent)
+
+        if (userEvent.images.isNotEmpty()) userEventImageRepository.deleteAll(userEvent.images)
+        
+        userEventRepository.delete(userEvent)
+    }
+
+    /**
+     * UserEvent에서 이미지들을 연결 해제
+     */
+    private fun unlinkImagesFromUserEvent(
+        userId: String,
+        imageIds: List<String>,
+        userEvent: UserEvent
+    ) {
+        val linkedImages = userEventImageRepository.findByIdInAndUserIdAndUserEventAndDeletedAtIsNull(
+            ids = imageIds,
+            userId = userId,
+            userEvent = userEvent
+        )
+        
+        if (linkedImages.size != imageIds.size) {
+            val foundIds = linkedImages.map { it.getId() }.toSet()
+            val notFoundIds = imageIds.filterNot { it in foundIds }
+            throw ApiException(ErrorTitle.NotFoundUserEventImage, "연결되지 않은 이미지가 있습니다: $notFoundIds")
+        }
+        
+        linkedImages.forEach { image ->
+            image.unlinkFromUserEvent()
+        }
+        
+        userEventImageRepository.saveAll(linkedImages)
+    }
 }

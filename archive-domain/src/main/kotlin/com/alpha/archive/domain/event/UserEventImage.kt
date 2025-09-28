@@ -80,4 +80,12 @@ class UserEventImage(
         this.status = UserEventImageStatus.LINKED
     }
 
+    /**
+     * UserEvent 연결 해제하고 상태를 TEMP로 변경
+     */
+    fun unlinkFromUserEvent() {
+        this.userEvent = null
+        this.status = UserEventImageStatus.TEMP
+        this.deletedAt = LocalDateTime.now()
+    }
 }

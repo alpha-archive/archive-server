@@ -67,4 +67,17 @@ class UserEvent(
     protected val mutableImages: MutableSet<UserEventImage> = mutableSetOf()
     val images: Set<UserEventImage> get() = mutableImages.toSet()
 
+    /**
+     * ActivityInfo 업데이트
+     */
+    fun updateActivityInfo(newActivityInfo: ActivityInfo) {
+        this.activityInfo = newActivityInfo
+    }
+
+    /**
+     * 활동 날짜 업데이트
+     */
+    fun updateActivityDate(newActivityDate: LocalDateTime) {
+        this.activityDate = newActivityDate
+    }
 }
