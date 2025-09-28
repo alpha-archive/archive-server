@@ -12,7 +12,7 @@ object ImageUtils {
         "image/gif", "image/webp"
     )
     
-    private const val MAX_FILE_SIZE = 10 * 1024 * 1024L // 10MB
+    private const val MAX_FILE_SIZE = 50 * 1024 * 1024L // 10MB
     private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd")
 
     /**
