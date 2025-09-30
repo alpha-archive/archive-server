@@ -4,6 +4,7 @@ import com.alpha.archive.common.annotations.ArchiveGetMapping
 import com.alpha.archive.common.dto.ApiResponse
 import com.alpha.archive.common.dto.CursorPaginatedWithTotalCountResponse
 import com.alpha.archive.common.dto.CursorRequest
+import com.alpha.archive.domain.event.enums.EventCategory
 import com.alpha.archive.exception.ErrorTitle
 import com.alpha.archive.exception.annotation.CustomFailResponseAnnotation
 import com.alpha.archive.recommendation.dto.response.RecommendedActivityResponse
@@ -29,7 +30,7 @@ class RecommendationController(
     @SwaggerApiResponse(responseCode = "200", description = "추천 활동 조회 성공")
     @Operation(
         summary = "추천 활동 목록 조회", 
-        description = "공공 데이터 기반으로 추천 활동 목록을 커서 페이지네이션으로 조회합니다. 지역명이나 활동명으로 필터링이 가능합니다."
+        description = "공공 데이터 기반으로 추천 활동 목록을 커서 페이지네이션으로 조회합니다. 지역명, 활동명, 카테고리로 필터링이 가능합니다."
     )
     @CustomFailResponseAnnotation(ErrorTitle.BadRequest)
     @CustomFailResponseAnnotation(ErrorTitle.NotFoundUser)
@@ -44,7 +45,10 @@ class RecommendationController(
         @RequestParam(required = false) location: String?,
 
         @Parameter(description = "활동명 필터 (제목에서 부분 검색)", required = false)
-        @RequestParam(required = false) title: String?
+        @RequestParam(required = false) title: String?,
+
+        @Parameter(description = "카테고리 필터 (EventCategory enum 값)", required = false)
+        @RequestParam(required = false) category: EventCategory?
     ): ResponseEntity<ApiResponse.Success<CursorPaginatedWithTotalCountResponse<RecommendedActivityResponse>>> {
         
         val cursorRequest = CursorRequest(cursor = cursor, size = size)
@@ -52,7 +56,8 @@ class RecommendationController(
         val result = recommendationService.getRecommendedActivities(
             cursorRequest = cursorRequest,
             locationFilter = location,
-            titleFilter = title
+            titleFilter = title,
+            categoryFilter = category
         )
         
         return ResponseUtil.success("추천 활동 목록을 성공적으로 조회했습니다.", result)

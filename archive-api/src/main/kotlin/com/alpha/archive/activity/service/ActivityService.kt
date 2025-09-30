@@ -213,7 +213,7 @@ class ActivityServiceImpl(
     /**
      * 사용자의 활동 리스트 페이징 조회
      */
-    override fun getUserActivities(userId: String):  List<ActivityResponse> {
+    override fun getUserActivities(userId: String): List<ActivityResponse> {
         userService.getUserEntityById(userId)
         
         val userEvents = userEventRepository.findByUserIdAndDeletedAtIsNull(userId)

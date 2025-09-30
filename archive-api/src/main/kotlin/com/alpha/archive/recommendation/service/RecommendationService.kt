@@ -3,6 +3,7 @@ package com.alpha.archive.recommendation.service
 import com.alpha.archive.common.dto.CursorPaginatedWithTotalCountResponse
 import com.alpha.archive.common.dto.CursorRequest
 import com.alpha.archive.domain.event.PublicEvent
+import com.alpha.archive.domain.event.enums.EventCategory
 import com.alpha.archive.domain.event.repository.PublicEventRepository
 import com.alpha.archive.recommendation.dto.response.RecommendedActivityResponse
 import org.springframework.stereotype.Service
@@ -17,12 +18,14 @@ class RecommendationService(
     fun getRecommendedActivities(
         cursorRequest: CursorRequest,
         locationFilter: String?,
-        titleFilter: String?
+        titleFilter: String?,
+        categoryFilter: EventCategory?
     ): CursorPaginatedWithTotalCountResponse<RecommendedActivityResponse> {
         // 전체 개수 조회
         val totalCount = publicEventRepository.countRecommendedActivities(
             locationFilter = locationFilter,
-            titleFilter = titleFilter
+            titleFilter = titleFilter,
+            categoryFilter = categoryFilter
         )
         
         // 데이터 조회
@@ -30,7 +33,8 @@ class RecommendationService(
             cursor = cursorRequest.cursor,
             size = cursorRequest.size,
             locationFilter = locationFilter,
-            titleFilter = titleFilter
+            titleFilter = titleFilter,
+            categoryFilter = categoryFilter
         )
         
         // 다음 페이지 존재 여부 확인
