@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -41,7 +42,7 @@ class RecommendationController(
         @Parameter(description = "페이지 사이즈", required = false)
         @RequestParam(defaultValue = "10") size: Int,
 
-        @Parameter(description = "지역명 필터 (장소명, 주소, 도시, 구/군에서 부분 검색)", required = false)
+        @Parameter(description = "지역명 필터 (주소, 도시, 구/군에서 부분 검색)", required = false)
         @RequestParam(required = false) location: String?,
 
         @Parameter(description = "활동명 필터 (제목에서 부분 검색)", required = false)
@@ -61,5 +62,20 @@ class RecommendationController(
         )
         
         return ResponseUtil.success("추천 활동 목록을 성공적으로 조회했습니다.", result)
+    }
+
+    @ArchiveGetMapping("/activities/{activityId}")
+    @SwaggerApiResponse(responseCode = "200", description = "추천 활동 상세 조회 성공")
+    @Operation(
+        summary = "추천 활동 상세 조회", 
+        description = "공공 데이터 기반 추천 활동의 상세 정보를 조회합니다. 카테고리, 일정, 장소 정보 등을 포함합니다."
+    )
+    @CustomFailResponseAnnotation(ErrorTitle.BadRequest)
+    fun getRecommendedActivityDetail(
+        @Parameter(description = "추천 활동 ID", required = true)
+        @PathVariable activityId: String
+    ): ResponseEntity<ApiResponse.Success<RecommendedActivityResponse>> {
+        val activity = recommendationService.getRecommendedActivityDetail(activityId)
+        return ResponseUtil.success("추천 활동 상세 정보를 성공적으로 조회했습니다.", activity)
     }
 }

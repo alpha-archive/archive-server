@@ -54,6 +54,13 @@ class RecommendationService(
         )
     }
     
+    fun getRecommendedActivityDetail(activityId: String): RecommendedActivityResponse {
+        val event = publicEventRepository.findByIdAndDeletedAtIsNull(activityId)
+            ?: throw IllegalArgumentException("추천 활동을 찾을 수 없습니다. ID: $activityId")
+        
+        return event.toRecommendedActivityResponse()
+    }
+    
     private fun PublicEvent.toRecommendedActivityResponse(): RecommendedActivityResponse {
         return RecommendedActivityResponse(
             id = this.id,
