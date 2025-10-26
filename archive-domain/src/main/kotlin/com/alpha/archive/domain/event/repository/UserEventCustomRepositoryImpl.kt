@@ -85,4 +85,34 @@ class UserEventCustomRepositoryImpl(
             .groupBy { it.dayOfWeek.value } // Java DayOfWeek: 1=월요일, 7=일요일
             .mapValues { it.value.size.toLong() }
     }
+    
+    override fun countAllUserActivities(userId: String): Long {
+        return queryFactory
+            .select(userEvent.count())
+            .from(userEvent)
+            .where(
+                userEvent.user.id.eq(userId)
+                    .and(userEvent.deletedAt.isNull)
+            )
+            .fetchOne() ?: 0L
+    }
+    
+    override fun findAllCategoryStatistics(userId: String): List<CategoryCount> {
+        return queryFactory
+            .select(
+                Projections.constructor(
+                    CategoryCount::class.java,
+                    userEvent.activityInfo.customCategory,
+                    userEvent.count()
+                )
+            )
+            .from(userEvent)
+            .where(
+                userEvent.user.id.eq(userId)
+                    .and(userEvent.deletedAt.isNull)
+            )
+            .groupBy(userEvent.activityInfo.customCategory)
+            .orderBy(userEvent.count().desc())
+            .fetch()
+    }
 }

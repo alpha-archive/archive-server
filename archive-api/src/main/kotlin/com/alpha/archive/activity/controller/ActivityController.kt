@@ -4,6 +4,7 @@ import com.alpha.archive.activity.dto.request.UpdateActivityRequest
 import com.alpha.archive.activity.dto.request.UserActivityRequest
 import com.alpha.archive.activity.dto.response.ActivityDetailResponse
 import com.alpha.archive.activity.dto.response.ActivityResponse
+import com.alpha.archive.activity.dto.response.OverallActivityStatisticsResponse
 import com.alpha.archive.activity.dto.response.WeeklyActivityStatisticsResponse
 import com.alpha.archive.activity.dto.response.MonthlyActivityStatisticsResponse
 import com.alpha.archive.activity.service.ActivityService
@@ -79,6 +80,20 @@ class ActivityController(
     ): ResponseEntity<ApiResponse.Success<MonthlyActivityStatisticsResponse>> {
         val statistics = activityService.getMonthlyActivityStatistics(userDetails.getUserId())
         return ResponseUtil.success("월간 활동 통계를 성공적으로 조회했습니다.", statistics)
+    }
+
+    @ArchiveGetMapping("/statistics/overall", authenticated = true)
+    @SwaggerApiResponse(responseCode = "200", description = "전체 활동 통계 조회 성공")
+    @Operation(
+        summary = "전체 활동 통계 조회 API", 
+        description = "사용자의 전체 활동 통계를 조회합니다. 전체 활동 기록 개수와 카테고리별 분포를 제공합니다."
+    )
+    @CustomFailResponseAnnotation(ErrorTitle.NotFoundUser)
+    fun getOverallActivityStatistics(
+        @AuthenticationPrincipal userDetails: ArchiveUserDetails
+    ): ResponseEntity<ApiResponse.Success<OverallActivityStatisticsResponse>> {
+        val statistics = activityService.getOverallActivityStatistics(userDetails.getUserId())
+        return ResponseUtil.success("전체 활동 통계를 성공적으로 조회했습니다.", statistics)
     }
 
     @ArchiveGetMapping("", authenticated = true)

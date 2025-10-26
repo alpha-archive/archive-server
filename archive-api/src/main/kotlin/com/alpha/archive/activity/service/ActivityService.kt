@@ -7,6 +7,7 @@ import com.alpha.archive.activity.dto.response.ActivityResponse
 import com.alpha.archive.activity.dto.response.CategoryStatisticResponse
 import com.alpha.archive.activity.dto.response.DayStatisticResponse
 import com.alpha.archive.activity.dto.response.MonthlyActivityStatisticsResponse
+import com.alpha.archive.activity.dto.response.OverallActivityStatisticsResponse
 import com.alpha.archive.activity.dto.response.WeekStatisticResponse
 import com.alpha.archive.activity.dto.response.WeeklyActivityStatisticsResponse
 import com.alpha.archive.activity.util.ActivityPeriodCalculator
@@ -28,6 +29,7 @@ interface ActivityService {
     fun createUserActivity(userId: String, request: UserActivityRequest)
     fun getWeeklyActivityStatistics(userId: String): WeeklyActivityStatisticsResponse
     fun getMonthlyActivityStatistics(userId: String): MonthlyActivityStatisticsResponse
+    fun getOverallActivityStatistics(userId: String): OverallActivityStatisticsResponse
     fun getUserActivities(userId: String): List<ActivityResponse>
     fun getUserActivityDetail(userId: String, activityId: String): ActivityDetailResponse
     fun updateUserActivity(userId: String, activityId: String, request: UpdateActivityRequest): ActivityDetailResponse
@@ -168,6 +170,25 @@ class ActivityServiceImpl(
             categoryStats = categoryStats,
             weeklyStats = weeklyStats,
             averageRating = basicStats.averageRating
+        )
+    }
+
+    /**
+     * 전체 활동 통계 조회
+     */
+    override fun getOverallActivityStatistics(userId: String): OverallActivityStatisticsResponse {
+        userService.getUserEntityById(userId)
+        
+        // 전체 활동 개수 조회
+        val totalCount = userEventRepository.countAllUserActivities(userId).toInt()
+        
+        // 전체 기간의 카테고리별 통계 조회
+        val categoryStats = userEventRepository.findAllCategoryStatistics(userId)
+            .buildCategoryStatistics(totalCount)
+        
+        return OverallActivityStatisticsResponse(
+            totalActivities = totalCount,
+            categoryStats = categoryStats
         )
     }
 
