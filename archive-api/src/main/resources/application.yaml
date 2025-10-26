@@ -64,3 +64,7 @@ logging:
     org.springframework.web.bind: DEBUG
     com.alpha.archive: DEBUG
     root: INFO
+
+openai:
+  api:
+    key: '채우세용' # 오픈 api 시크릿 키
