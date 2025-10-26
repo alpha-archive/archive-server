@@ -86,11 +86,10 @@ class PublicEventRepositoryImpl(
 
     /**
      * 지역 관련 필터 조건을 빌드합니다.
-     * 장소명, 주소, 도시, 구/군에서 검색합니다.
+     * 주소, 도시, 구/군에서 검색합니다. (장소명은 제외하여 정확한 지역 검색 보장)
      */
     private fun buildLocationCondition(location: String): BooleanBuilder {
         return BooleanBuilder().apply {
-            or(publicEvent.place.placeName.containsIgnoreCase(location))
             or(publicEvent.place.placeAddress.containsIgnoreCase(location))
             or(publicEvent.place.placeCity.containsIgnoreCase(location))
             or(publicEvent.place.placeDistrict.containsIgnoreCase(location))
