@@ -60,6 +60,7 @@ class RecommendationService(
             title = this.title,
             description = this.description,
             category = this.category,
+            thumbnailImageUrl = this.meta.imageUrl,
             startAt = this.startAt,
             endAt = this.endAt,
             placeName = this.place.placeName,

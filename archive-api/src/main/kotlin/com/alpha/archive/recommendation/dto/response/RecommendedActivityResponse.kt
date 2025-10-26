@@ -17,6 +17,9 @@ data class RecommendedActivityResponse(
     
     @Schema(description = "활동 카테고리", example = "MUSICAL")
     val category: EventCategory,
+
+    @Schema(description = "썸네일 이미지 url", example = "http~")
+    val thumbnailImageUrl: String?,
     
     @Schema(description = "시작 날짜", example = "2024-01-15T19:30:00")
     val startAt: LocalDateTime?,
