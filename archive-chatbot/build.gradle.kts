@@ -1,8 +1,9 @@
+import org.springframework.boot.gradle.tasks.bundling.BootJar
+
 plugins {
     kotlin("jvm")
 }
 
-group = "com.alpha"
 version = "0.0.1-SNAPSHOT"
 
 repositories {
@@ -17,9 +18,18 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
 }
 
+tasks.named<BootJar>("bootJar") {
+    enabled = false
+}
+
+tasks.getByName("jar") {
+    enabled = true
+}
+
 tasks.test {
     useJUnitPlatform()
 }
+
 kotlin {
     jvmToolchain(17)
 }

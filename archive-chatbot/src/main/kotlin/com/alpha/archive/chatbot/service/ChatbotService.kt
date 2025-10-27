@@ -28,7 +28,6 @@ class ChatbotService(
 
     private fun getHistoryKey(userId: String) = "chatbot:history:$userId"
 
-    @Transactional
     suspend fun continueConversation(userId: String, userMessage: String): String {
         val historyKey = getHistoryKey(userId)
 
@@ -70,6 +69,7 @@ class ChatbotService(
         }
     }
 
+    @Transactional
     private fun saveUserEvent(userId: String, data: EventDataDto) {
         val user = userRepository.findUserById(userId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "해당 ID의 사용자를 찾을 수 없습니다: $userId")
