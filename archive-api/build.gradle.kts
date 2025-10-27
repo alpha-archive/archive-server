@@ -11,6 +11,7 @@ dependencies {
     implementation(project(":archive-common"))
     implementation(project(":archive-domain"))
     implementation(project(":archive-auth"))
+    implementation(project(":archive-chatbot"))
     
     // Spring Boot Actuator
     implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -22,6 +23,7 @@ dependencies {
     testImplementation("com.h2database:h2")
     testImplementation("org.mockito:mockito-core")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
 }
 
 springBoot {

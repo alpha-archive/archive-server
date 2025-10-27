@@ -31,6 +31,8 @@ import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import java.lang.reflect.Method
+import jakarta.servlet.DispatcherType
+import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer
 
 @Configuration
 @EnableWebSecurity
@@ -56,12 +58,17 @@ class SecurityConfig(
         .csrf { it.disable() }
         .cors { it.configurationSource(corsConfigurationSource()) }
         .headers { it.frameOptions { fo -> fo.sameOrigin() } }
-        .applyDynamicUrlSecurity(applicationContext)
-        .authorizeHttpRequests {
-            it
-                .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .anyRequest().permitAll()
+        .authorizeHttpRequests { auth: AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry ->
+            // 비동기 해결 ASYNC 타입 요청을 맨 먼저 허용(chatbot 인증문제)
+            auth.dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
+
+            auth.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+            auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+            applyDynamicUrlSecurity(applicationContext, auth)
+
+            // 여기 이렇게 수정하는게 좋다해서 일단 했는데 확인 부탁
+            auth.anyRequest().authenticated()
         }
         .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
         .addFilterBefore(JwtAuthenticationFilter(jwtService), BasicAuthenticationFilter::class.java)
@@ -87,28 +94,32 @@ class SecurityConfig(
         return source
     }
 
-    fun HttpSecurity.applyDynamicUrlSecurity(applicationContext: ApplicationContext): HttpSecurity {
+    fun applyDynamicUrlSecurity(
+        applicationContext: ApplicationContext,
+        auth: AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry
+    ) {
         val controllers = applicationContext.getBeansWithAnnotation(Controller::class.java)
 
         controllers.values.forEach { controller ->
             val parentPath = controller.javaClass.getAnnotation(RequestMapping::class.java)?.value?.firstOrNull()
 
             controller.javaClass.declaredMethods.forEach { method ->
-                handleMapping<ArchiveGetMapping>(method, HttpMethod.GET, parentPath)
-                handleMapping<ArchivePostMapping>(method, HttpMethod.POST, parentPath)
-                handleMapping<ArchivePatchMapping>(method, HttpMethod.PATCH, parentPath)
-                handleMapping<ArchivePutMapping>(method, HttpMethod.PUT, parentPath)
-                handleMapping<ArchiveDeleteMapping>(method, HttpMethod.DELETE, parentPath)
+                // 'auth' 객체를 하위 함수로 전달합니다.
+                handleMapping<ArchiveGetMapping>(method, HttpMethod.GET, parentPath, auth)
+                handleMapping<ArchivePostMapping>(method, HttpMethod.POST, parentPath, auth)
+                handleMapping<ArchivePatchMapping>(method, HttpMethod.PATCH, parentPath, auth)
+                handleMapping<ArchivePutMapping>(method, HttpMethod.PUT, parentPath, auth)
+                handleMapping<ArchiveDeleteMapping>(method, HttpMethod.DELETE, parentPath, auth)
             }
         }
-        return this
     }
 
     @Suppress("UNCHECKED_CAST")
-    private inline fun <reified T : Annotation> HttpSecurity.handleMapping(
+    private inline fun <reified T : Annotation> handleMapping(
         method: Method,
         httpMethod: HttpMethod,
-        parentPath: String?
+        parentPath: String?,
+        auth: AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry
     ) {
         method.getAnnotation(T::class.java)?.let { mapping ->
             val paths = mapping.javaClass.getMethod("value").invoke(mapping) as Array<String>
@@ -116,40 +127,38 @@ class SecurityConfig(
             val authenticated = mapping.javaClass.getMethod("authenticated").invoke(mapping) as Boolean
 
             when {
-                hasRole.isNotEmpty() -> configureHasRole(httpMethod, parentPath, paths, hasRole)
-                authenticated -> configureAuthenticated(httpMethod, parentPath, paths)
+                hasRole.isNotEmpty() -> configureHasRole(httpMethod, parentPath, paths, hasRole, auth)
+                authenticated -> configureAuthenticated(httpMethod, parentPath, paths, auth)
             }
         }
     }
 
-    private fun HttpSecurity.configureHasRole(
+    private fun configureHasRole(
         httpMethod: HttpMethod,
         parentPath: String?,
         paths: Array<String>,
-        roles: Array<String>
+        roles: Array<String>,
+        auth: AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry
     ) {
-        authorizeHttpRequests {
-            if (paths.isEmpty()) {
-                it.requestMatchers(httpMethod, parentPath).hasAnyRole(*roles)
-            }
-            paths.forEach { p ->
-                it.requestMatchers(httpMethod, formatPath(p, parentPath)).hasAnyRole(*roles)
-            }
+        if (paths.isEmpty()) {
+            auth.requestMatchers(httpMethod, parentPath).hasAnyRole(*roles)
+        }
+        paths.forEach { p ->
+            auth.requestMatchers(httpMethod, formatPath(p, parentPath)).hasAnyRole(*roles)
         }
     }
 
-    private fun HttpSecurity.configureAuthenticated(
+    private fun configureAuthenticated(
         httpMethod: HttpMethod,
         parentPath: String?,
-        paths: Array<String>
+        paths: Array<String>,
+        auth: AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry
     ) {
-        authorizeHttpRequests {
-            if (paths.isEmpty()) {
-                it.requestMatchers(httpMethod, parentPath).authenticated()
-            }
-            paths.forEach { p ->
-                it.requestMatchers(httpMethod, formatPath(p, parentPath)).authenticated()
-            }
+        if (paths.isEmpty()) {
+            auth.requestMatchers(httpMethod, parentPath).authenticated()
+        }
+        paths.forEach { p ->
+            auth.requestMatchers(httpMethod, formatPath(p, parentPath)).authenticated()
         }
     }
 
