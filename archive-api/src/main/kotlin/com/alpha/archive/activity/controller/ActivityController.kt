@@ -72,13 +72,16 @@ class ActivityController(
     @SwaggerApiResponse(responseCode = "200", description = "월간 활동 통계 조회 성공")
     @Operation(
         summary = "월간 활동 통계 조회 API", 
-        description = "사용자의 이번 달 활동 통계를 조회합니다. 카테고리별 분포, 주별 활동량, 평균 평점 등을 제공합니다."
+        description = "사용자의 특정 월 일별 활동 건수를 조회합니다. GitHub 잔디처럼 날짜별 활동 건수를 제공합니다."
     )
+    @CustomFailResponseAnnotation(ErrorTitle.BadRequest)
     @CustomFailResponseAnnotation(ErrorTitle.NotFoundUser)
     fun getMonthlyActivityStatistics(
-        @AuthenticationPrincipal userDetails: ArchiveUserDetails
+        @AuthenticationPrincipal userDetails: ArchiveUserDetails,
+        @Parameter(description = "조회할 년월 (yyyy-MM 형식)", example = "2025-10", required = true)
+        @RequestParam yearMonth: String
     ): ResponseEntity<ApiResponse.Success<MonthlyActivityStatisticsResponse>> {
-        val statistics = activityService.getMonthlyActivityStatistics(userDetails.getUserId())
+        val statistics = activityService.getMonthlyActivityStatistics(userDetails.getUserId(), yearMonth)
         return ResponseUtil.success("월간 활동 통계를 성공적으로 조회했습니다.", statistics)
     }
 

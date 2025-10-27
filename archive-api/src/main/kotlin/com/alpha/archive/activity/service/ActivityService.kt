@@ -6,11 +6,13 @@ import com.alpha.archive.activity.dto.response.ActivityDetailResponse
 import com.alpha.archive.activity.dto.response.ActivityResponse
 import com.alpha.archive.activity.dto.response.CategoryStatisticResponse
 import com.alpha.archive.activity.dto.response.DayStatisticResponse
+import com.alpha.archive.activity.dto.response.DailyActivityCount
 import com.alpha.archive.activity.dto.response.MonthlyActivityStatisticsResponse
 import com.alpha.archive.activity.dto.response.OverallActivityStatisticsResponse
-import com.alpha.archive.activity.dto.response.WeekStatisticResponse
 import com.alpha.archive.activity.dto.response.WeeklyActivityStatisticsResponse
 import com.alpha.archive.activity.util.ActivityPeriodCalculator
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import com.alpha.archive.domain.event.UserEvent
 import com.alpha.archive.domain.event.embeddable.ActivityInfo
 import com.alpha.archive.domain.event.enums.UserEventImageStatus
@@ -28,7 +30,7 @@ import kotlin.math.roundToInt
 interface ActivityService {
     fun createUserActivity(userId: String, request: UserActivityRequest)
     fun getWeeklyActivityStatistics(userId: String): WeeklyActivityStatisticsResponse
-    fun getMonthlyActivityStatistics(userId: String): MonthlyActivityStatisticsResponse
+    fun getMonthlyActivityStatistics(userId: String, yearMonth: String): MonthlyActivityStatisticsResponse
     fun getOverallActivityStatistics(userId: String): OverallActivityStatisticsResponse
     fun getUserActivities(userId: String): List<ActivityResponse>
     fun getUserActivityDetail(userId: String, activityId: String): ActivityDetailResponse
@@ -149,27 +151,34 @@ class ActivityServiceImpl(
     }
 
     /**
-     * 월간 활동 통계 조회
+     * 월간 활동 통계 조회 (GitHub 잔디 스타일)
+     * @param yearMonth 조회할 년월 (예: "2025-10")
      */
-    override fun getMonthlyActivityStatistics(userId: String): MonthlyActivityStatisticsResponse {
-        userService.getUserEntityById(userId)
+    override fun getMonthlyActivityStatistics(userId: String, yearMonth: String): MonthlyActivityStatisticsResponse {
+        val user = userService.getUserEntityById(userId)
         
-        val (startDate, endDate) = ActivityPeriodCalculator.calculateMonthlyPeriod()
+        val parsedYearMonth = try {
+            YearMonth.parse(yearMonth, DateTimeFormatter.ofPattern("yyyy-MM"))
+        } catch (e: Exception) {
+            throw ApiException(ErrorTitle.BadRequest, "잘못된 날짜 형식입니다. yyyy-MM 형식으로 입력해주세요. (예: 2025-10)")
+        }
         
-        val basicStats = userEventRepository.findUserActivityStatistics(userId, startDate, endDate)
-        val totalCount = basicStats.totalCount.toInt()
+        val startDate = parsedYearMonth.atDay(1).atStartOfDay()
+        val endDate = parsedYearMonth.atEndOfMonth().atTime(23, 59, 59)
         
-        val categoryStats = userEventRepository.findCategoryStatistics(userId, startDate, endDate)
-            .buildCategoryStatistics(totalCount)
+        val activityCountByDate = userEventRepository.findActivityCountsByDate(user.id, startDate, endDate)
         
-        val weeklyStats = userEventRepository.findByUserIdAndActivityDateBetween(userId, startDate, endDate)
-            .buildWeeklyStatistics()
+        val dailyActivities = (1..parsedYearMonth.lengthOfMonth()).map { day ->
+            val date = parsedYearMonth.atDay(day)
+            DailyActivityCount(
+                day = date,
+                count = (activityCountByDate[date] ?: 0L).toInt()
+            )
+        }
         
         return MonthlyActivityStatisticsResponse(
-            totalActivities = totalCount,
-            categoryStats = categoryStats,
-            weeklyStats = weeklyStats,
-            averageRating = basicStats.averageRating
+            yearMonth = yearMonth,
+            dailyActivities = dailyActivities
         )
     }
 
@@ -215,21 +224,6 @@ class ActivityServiceImpl(
             )
         }
     }
-
-    private fun List<UserEvent>.buildWeeklyStatistics(): List<WeekStatisticResponse> =
-        groupBy { activity ->
-            val dayOfMonth = activity.activityDate.dayOfMonth
-            ((dayOfMonth - 1) / 7) + 1
-        }
-        .mapValues { it.value.size         }
-        .let { activityCountByWeek ->
-            (1..5).map { weekOfMonth ->
-                WeekStatisticResponse(
-                    weekOfMonth = weekOfMonth,
-                    count = activityCountByWeek[weekOfMonth] ?: 0
-                )
-            }.filter { it.count > 0 || it.weekOfMonth <= 4 }
-        }
 
     /**
      * 사용자의 활동 리스트 페이징 조회

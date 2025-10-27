@@ -8,6 +8,7 @@ import com.querydsl.core.types.Projections
 import com.querydsl.core.types.dsl.Expressions.numberTemplate
 import com.querydsl.jpa.impl.JPAQueryFactory
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Repository
@@ -83,6 +84,27 @@ class UserEventCustomRepositoryImpl(
 
         return activities
             .groupBy { it.dayOfWeek.value } // Java DayOfWeek: 1=월요일, 7=일요일
+            .mapValues { it.value.size.toLong() }
+    }
+    
+    override fun findActivityCountsByDate(
+        userId: String,
+        startDate: LocalDateTime,
+        endDate: LocalDateTime
+    ): Map<LocalDate, Long> {
+        // 활동 날짜 목록을 조회하고 애플리케이션에서 날짜별로 그룹핑
+        val activities = queryFactory
+            .select(userEvent.activityDate)
+            .from(userEvent)
+            .where(
+                userEvent.user.id.eq(userId)
+                    .and(userEvent.activityDate.between(startDate, endDate))
+                    .and(userEvent.deletedAt.isNull)
+            )
+            .fetch()
+
+        return activities
+            .groupBy { it.toLocalDate() }
             .mapValues { it.value.size.toLong() }
     }
     
