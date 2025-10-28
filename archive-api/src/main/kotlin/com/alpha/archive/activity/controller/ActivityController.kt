@@ -58,7 +58,7 @@ class ActivityController(
     @SwaggerApiResponse(responseCode = "200", description = "주간 활동 통계 조회 성공")
     @Operation(
         summary = "주간 활동 통계 조회 API", 
-        description = "사용자의 이번 주 활동 통계를 조회합니다. 카테고리별 분포, 요일별 활동량, 평균 평점 등을 제공합니다."
+        description = "사용자의 최근 7일간(오늘 기준 뒤로 7일) 활동 통계를 조회합니다. 카테고리별 분포, 요일별 활동량, 평균 평점 등을 제공합니다."
     )
     @CustomFailResponseAnnotation(ErrorTitle.NotFoundUser)
     fun getWeeklyActivityStatistics(

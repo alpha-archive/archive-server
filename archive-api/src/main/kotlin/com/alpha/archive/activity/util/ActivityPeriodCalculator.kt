@@ -8,15 +8,14 @@ import java.time.LocalDateTime
 object ActivityPeriodCalculator {
     
     /**
-     * 이번 주 기간 계산 (월요일 00:00 ~ 일요일 23:59)
+     * 최근 7일 기간 계산 (7일 전 00:00 ~ 오늘 23:59)
      */
     fun calculateWeeklyPeriod(): Pair<LocalDateTime, LocalDateTime> {
         val now = LocalDateTime.now()
-        val startOfWeek = now.minusDays((now.dayOfWeek.value - 1).toLong())
+        val endDate = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999)
+        val startDate = now.minusDays(6)
             .withHour(0).withMinute(0).withSecond(0).withNano(0)
-        val endOfWeek = startOfWeek.plusDays(6)
-            .withHour(23).withMinute(59).withSecond(59).withNano(999999999)
-        return startOfWeek to endOfWeek
+        return startDate to endDate
     }
 
     /**
