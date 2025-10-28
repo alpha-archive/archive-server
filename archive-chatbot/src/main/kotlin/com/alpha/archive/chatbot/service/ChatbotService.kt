@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
 @Service
@@ -83,7 +84,7 @@ class ChatbotService(
         )
         val userEvent = UserEvent(
             user = user,
-            activityDate = data.activityDate,
+            activityDate = data.activityDate ?: LocalDateTime.now(),
             activityInfo = activityInfo
         )
 
