@@ -59,3 +59,7 @@ logging:
     org.springframework.web.bind: WARN
     com.alpha.archive: DEBUG  # 애플리케이션 로그는 DEBUG 유지
     root: INFO
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY}

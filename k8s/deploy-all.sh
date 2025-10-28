@@ -24,7 +24,11 @@ kubectl apply -f ncp-object-storage-secret.yaml
 echo "💬 Deploying Slack config..."
 kubectl apply -f slack-secret.yaml
 
-# 5. Archive API 배포
+# 5. OpenAI 설정 배포
+echo "🤖 Deploying OpenAI config..."
+kubectl apply -f openai-secret.yaml
+
+# 6. Archive API 배포
 echo "🛠️  Deploying Archive API..."
 kubectl apply -f deployment.yaml
 kubectl apply -f service.yaml

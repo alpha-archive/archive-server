@@ -125,7 +125,7 @@ jobs:
           -n ${{ env.KUBE_NAMESPACE }}
         
         # Wait for rollout to complete
-        kubectl rollout status deployment/archive-api -n ${{ env.KUBE_NAMESPACE }} --timeout=300s
+        kubectl rollout status deployment/archive-api -n ${{ env.KUBE_NAMESPACE }} --timeout=600s
         
         # Verify deployment
         kubectl get pods -n ${{ env.KUBE_NAMESPACE }} -l app=archive-api
