@@ -64,10 +64,10 @@ class SecurityConfig(
 
             auth.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
             auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+            auth.requestMatchers("/actuator/health").permitAll()
 
             applyDynamicUrlSecurity(applicationContext, auth)
 
-            // 여기 이렇게 수정하는게 좋다해서 일단 했는데 확인 부탁
             auth.anyRequest().authenticated()
         }
         .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
