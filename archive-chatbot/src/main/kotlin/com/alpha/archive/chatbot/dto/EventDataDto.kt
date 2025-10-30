@@ -4,7 +4,7 @@ import com.alpha.archive.domain.event.enums.EventCategory
 import java.time.LocalDateTime
 
 data class EventDataDto(
-    val activityDate: LocalDateTime,
+    val activityDate: LocalDateTime?,
     val customTitle: String,
     val customCategory: EventCategory,
     val customLocation: String? = null,
