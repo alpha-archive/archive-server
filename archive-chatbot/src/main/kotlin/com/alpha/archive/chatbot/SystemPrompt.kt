@@ -3,7 +3,7 @@ package com.alpha.archive.chatbot
 import com.alpha.archive.domain.event.enums.EventCategory
 
 object SystemPrompt {
-    // EventCategory enum 값을 동적으로 가져와 프롬프트에 포함
+    // EventCategory enum 값을 동적으로 가져와 프롬프트에 포함 
     private val categories = EventCategory.entries.joinToString(", ")
 
     val PROMPT: String = """
