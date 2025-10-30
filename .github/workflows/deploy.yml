@@ -8,6 +8,7 @@ on:
       - 'archive-auth/**'
       - 'archive-common/**'
       - 'archive-domain/**'
+      - 'archive-chatbot/**'
       - 'build.gradle.kts'
       - 'settings.gradle.kts'
   workflow_dispatch:
