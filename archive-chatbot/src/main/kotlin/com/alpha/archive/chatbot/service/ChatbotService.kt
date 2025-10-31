@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
@@ -34,37 +35,42 @@ class ChatbotService(
 
         val rawHistory: Any? = redisTemplate.opsForValue().get(historyKey)
 
+        val currentSystemPrompt = SystemPrompt.getPrompt(LocalDate.now())
+
         val history: MutableList<Message> = if (rawHistory == null) {
-            // 'if'가 참일 때 이 값을 반환하여 history에 할당.
-            mutableListOf(Message(role = "system", content = SystemPrompt.PROMPT))
+            mutableListOf(Message(role = "system", content = currentSystemPrompt))
         } else {
-            // 'else'일 경우, 'try/catch' 표현식의 결과를 반환하여 history에 할당.
             try {
-                objectMapper.convertValue(
+                val loadedHistory: MutableList<Message> = objectMapper.convertValue(
                     rawHistory,
                     object : TypeReference<MutableList<Message>>() {}
                 )
+
+                if (loadedHistory.isNotEmpty() && loadedHistory[0].role == "system") {
+                    loadedHistory[0] = Message(role = "system", content = currentSystemPrompt)
+                } else {
+                    loadedHistory.add(0, Message(role = "system", content = currentSystemPrompt))
+                }
+                loadedHistory
+
             } catch (e: Exception) {
-                mutableListOf(Message(role = "system", content = SystemPrompt.PROMPT))
+                mutableListOf(Message(role = "system", content = currentSystemPrompt))
             }
         }
 
         history.add(Message(role = "user", content = userMessage))
-        // OpenAI API 호출
+
         val aiResponse = openAPIService.askWithHistory(history)
         val aiMessageContent = aiResponse.choices?.firstOrNull()?.message?.content
             ?: return "죄송해요, 답변을 생성하는 데 문제가 생겼어요. 다시 시도해 주세요."
 
-        // AI 응답이 JSON인지 파싱 시도
         try {
             val eventData = objectMapper.readValue<EventDataDto>(aiMessageContent)
             saveUserEvent(userId, eventData)
-            // 성공 시 Redis에서 대화 기록 삭제
             redisTemplate.delete(historyKey)
             return "경험이 성공적으로 기록되었어요! 또 다른 이야기를 들려주세요."
         } catch (e: Exception) {
             history.add(Message(role = "assistant", content = aiMessageContent))
-            // 실패 시 (대화 지속) 업데이트된 기록을 Redis에 다시 저장 (1시간 뒤 자동 만료되도록 설정)
             redisTemplate.opsForValue().set(historyKey, history, 1, TimeUnit.HOURS)
             return aiMessageContent
         }
