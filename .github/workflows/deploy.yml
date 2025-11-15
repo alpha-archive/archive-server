@@ -74,11 +74,9 @@ jobs:
     - name: 🐳 Build and Push Docker Image to ECR
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ steps.version.outputs.IMAGE_TAG }}
       run: |
         echo "🏗️ Building Docker image..."
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
         
         echo "⬆️ Pushing to ECR..."
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
@@ -88,13 +86,12 @@ jobs:
     - name: 📝 Create Dockerrun.aws.json
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ steps.version.outputs.IMAGE_TAG }}
       run: |
         cat > Dockerrun.aws.json << EOF
         {
           "AWSEBDockerrunVersion": "1",
           "Image": {
-            "Name": "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG",
+            "Name": "$ECR_REGISTRY/$ECR_REPOSITORY:latest",
             "Update": "true"
           },
           "Ports": [
