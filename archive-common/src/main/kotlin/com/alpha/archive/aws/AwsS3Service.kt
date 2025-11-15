@@ -2,13 +2,11 @@ package com.alpha.archive.aws
 
 import com.alpha.archive.config.AwsS3Properties
 import com.alpha.archive.storage.ObjectStorageService
-import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest
-import software.amazon.awssdk.services.s3.model.ObjectCannedACL
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
 
 /**
@@ -29,7 +27,6 @@ class AwsS3Service(
             .key(objectKey)
             .contentType(file.contentType)
             .contentLength(file.size)
-            .acl(ObjectCannedACL.PUBLIC_READ) // 파일을 public으로 설정
             .build()
 
         val requestBody = RequestBody.fromInputStream(file.inputStream, file.size)
