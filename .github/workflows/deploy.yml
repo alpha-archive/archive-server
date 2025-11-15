@@ -54,10 +54,8 @@ jobs:
     - name: 🔍 Get version info
       id: version
       run: |
-        VERSION=$(grep -E '^version\s*=' build.gradle.kts | sed -E 's/.*"(.+)".*/\1/')
         COMMIT_HASH=$(echo ${{ github.sha }} | cut -c1-7)
-        IMAGE_TAG="${VERSION}-${COMMIT_HASH}"
-        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        IMAGE_TAG="v1.0.0-${COMMIT_HASH}"
         echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
         echo "COMMIT_HASH=$COMMIT_HASH" >> $GITHUB_OUTPUT
         echo "📦 Building version: $IMAGE_TAG"
