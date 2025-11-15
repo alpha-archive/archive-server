@@ -125,6 +125,7 @@ jobs:
         version_label: ${{ steps.version.outputs.IMAGE_TAG }}
         region: ${{ env.AWS_REGION }}
         deployment_package: deploy-${{ steps.version.outputs.COMMIT_HASH }}.zip
+        use_existing_version_if_available: true
         wait_for_deployment: true
         wait_for_environment_recovery: 300
         
