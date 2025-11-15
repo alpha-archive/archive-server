@@ -38,3 +38,12 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+
+# 로컬 설정 파일
+redis-setup.sh
+redis-server-info.txt

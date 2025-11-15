@@ -1,6 +1,8 @@
-package com.alpha.archive.ncp
+package com.alpha.archive.aws
 
-import com.alpha.archive.config.NcpObjectStorageProperties
+import com.alpha.archive.config.AwsS3Properties
+import com.alpha.archive.storage.ObjectStorageService
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import software.amazon.awssdk.core.sync.RequestBody
@@ -9,16 +11,19 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
 
+/**
+ * AWS S3 서비스 (Elastic Beanstalk 환경용)
+ */
 @Service
-class NcpObjectStorageService(
+class AwsS3Service(
     private val s3Client: S3Client,
-    private val properties: NcpObjectStorageProperties
-) {
+    private val properties: AwsS3Properties
+) : ObjectStorageService {
 
     /**
-     * 파일을 Object Storage에 업로드하고 URL 반환
+     * 파일을 S3에 업로드하고 URL 반환
      */
-    fun uploadFile(file: MultipartFile, objectKey: String): String {
+    override fun uploadFile(file: MultipartFile, objectKey: String): String {
         val putRequest = PutObjectRequest.builder()
             .bucket(properties.bucketName)
             .key(objectKey)
@@ -34,9 +39,9 @@ class NcpObjectStorageService(
     }
 
     /**
-     * Object Storage에서 파일 삭제
+     * S3에서 파일 삭제
      */
-    fun deleteFile(objectKey: String) {
+    override fun deleteFile(objectKey: String) {
         val deleteRequest = DeleteObjectRequest.builder()
             .bucket(properties.bucketName)
             .key(objectKey)
@@ -46,25 +51,22 @@ class NcpObjectStorageService(
     }
 
     /**
-     * 공개 URL 생성 (HTTPS)
+     * 공개 URL 생성
      */
-    fun buildPublicUrl(objectKey: String): String {
-        val httpsEndpoint = properties.endpoint.replace("http://", "https://")
-        return "$httpsEndpoint/${properties.bucketName}/$objectKey"
+    override fun buildPublicUrl(objectKey: String): String {
+        // S3 표준 URL 형식
+        return "https://${properties.bucketName}.s3.${properties.region}.amazonaws.com/$objectKey"
     }
 
     /**
-     * URL에서 object key 추출 (HTTP/HTTPS 모두 지원)
+     * URL에서 object key 추출
      */
-    fun extractObjectKey(url: String): String {
-        val httpsEndpoint = properties.endpoint.replace("http://", "https://")
-        val httpsPrefix = "$httpsEndpoint/${properties.bucketName}/"
-        val httpPrefix = "${properties.endpoint}/${properties.bucketName}/"
+    override fun extractObjectKey(url: String): String {
+        val prefix = "https://${properties.bucketName}.s3.${properties.region}.amazonaws.com/"
         
         return when {
-            url.startsWith(httpsPrefix) -> url.substring(httpsPrefix.length)
-            url.startsWith(httpPrefix) -> url.substring(httpPrefix.length)
-            else -> throw IllegalArgumentException("잘못된 Object Storage URL 형식입니다: $url")
+            url.startsWith(prefix) -> url.substring(prefix.length)
+            else -> throw IllegalArgumentException("잘못된 S3 URL 형식입니다: $url")
         }
     }
 }

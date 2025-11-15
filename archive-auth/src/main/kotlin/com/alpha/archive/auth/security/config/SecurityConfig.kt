@@ -64,6 +64,7 @@ class SecurityConfig(
 
             auth.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
             auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+            auth.requestMatchers( "/api/recommendations/**").permitAll()
             auth.requestMatchers("/actuator/health").permitAll()
 
             applyDynamicUrlSecurity(applicationContext, auth)

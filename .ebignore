@@ -1,0 +1,29 @@
+# Git 관련
+.git
+.gitignore
+
+# 문서 파일
+*.md
+!README.md
+
+# 환경 설정
+.env
+.env.local
+
+# 빌드 제외 (ECR 이미지 사용)
+archive-*/build
+build
+.gradle
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# 로컬 테스트 파일
+docker-compose*.yaml
+docker-compose*.yml
+
+# 기타
+.DS_Store
+*.log

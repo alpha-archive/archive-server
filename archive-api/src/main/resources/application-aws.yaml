@@ -1,0 +1,88 @@
+server:
+  port: 5000  # Elastic Beanstalk 기본 포트
+
+spring:
+  application:
+    name: archive
+  
+  datasource:
+    # AWS RDS PostgreSQL로 연결 (환경변수로 주입)
+    url: jdbc:postgresql://${RDS_HOSTNAME}:${RDS_PORT:5432}/${RDS_DB_NAME:archive}
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      timeout: 3000ms
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+      enabled: true
+
+jwt:
+  common:
+    key: YXJjaGl2ZV9qd3Rfc2VjcmV0X2tleV90aGlzX2lzX2FfbG9uZ19zZWNyZXRfa2V5X2Zvcl9qd3RfdG9rZW5fZ2VuZXJhdGlvbl9hbmRfdmFsaWRhdGlvbg==
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+slack:
+  bot:
+    token: ${SLACK_BOT_TOKEN}
+    channel: "${SLACK_CHANNEL}"
+
+aws:
+  s3:
+    region: ap-northeast-2
+    bucket-name: ${S3_BUCKET_NAME}
+
+cloud:
+  aws:
+    region:
+      static: ap-northeast-2
+    credentials:
+      instance-profile: true  # EC2 인스턴스 프로파일 사용
+    stack:
+      auto: false
+
+logging:
+  level:
+    org.springframework: INFO
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    com.alpha.archive: INFO
+    root: INFO
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

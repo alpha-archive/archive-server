@@ -46,12 +46,9 @@ slack:
     token: eG94Yi05MTU2MTU5NTkxMDI4LTk0OTg1ODEyNTgxMTQtTFh0WVRXS096aFBGSXpobE9YSkpNOXE5
     channel: "#백엔드_에러알림"
 
-ncp:
-  object-storage:
-    endpoint: https://kr.object.ncloudstorage.com
-    region: kr-standard
-    access-key: '채우세용' ## 네이버 클라우드 액세스 키
-    secret-key: '채우세용' ## 네이버 클라우드 시크릿 키
+aws:
+  s3:
+    region: ap-northeast-2
     bucket-name: archive-image-storage
 
 logging:
@@ -67,4 +64,4 @@ logging:
 
 openai:
   api:
-    key: '채우세용' # 오픈 api 시크릿 키
+    key: ${OPENAI_API_KEY:dummy-key-for-local-dev}

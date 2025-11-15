@@ -1,4 +1,4 @@
-name: 🚀 Deploy Archive API to Kubernetes
+name: 🚀 Deploy Archive API to AWS Elastic Beanstalk
 
 on:
   push:
@@ -11,12 +11,15 @@ on:
       - 'archive-chatbot/**'
       - 'build.gradle.kts'
       - 'settings.gradle.kts'
+      - 'Dockerfile'
+      - '.ebextensions/**'
   workflow_dispatch:
 
 env:
-  NCP_REGISTRY: archive-cr.kr.ncr.ntruss.com
-  IMAGE_NAME: archive-api
-  KUBE_NAMESPACE: archive
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: archive-api
+  EB_APPLICATION_NAME: archive-server-eb
+  EB_ENVIRONMENT_NAME: archive-prod
 
 jobs:
   build-and-deploy:
@@ -45,92 +48,92 @@ jobs:
     - name: 🔨 Build with Gradle
       run: |
         chmod +x ./gradlew
-        ./gradlew :archive-api:build -x test
+        ./gradlew clean build -x test
         
-    - name: 🔍 Get version from build.gradle
+    - name: 🔍 Get version info
       id: version
       run: |
         VERSION=$(grep -E '^version\s*=' build.gradle.kts | sed -E 's/.*"(.+)".*/\1/')
+        COMMIT_HASH=$(echo ${{ github.sha }} | cut -c1-7)
+        IMAGE_TAG="${VERSION}-${COMMIT_HASH}"
         echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-        echo "IMAGE_TAG=v$VERSION-${{ github.run_number }}" >> $GITHUB_OUTPUT
-        echo "📦 Building version: v$VERSION-${{ github.run_number }}"
+        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        echo "COMMIT_HASH=$COMMIT_HASH" >> $GITHUB_OUTPUT
+        echo "📦 Building version: $IMAGE_TAG"
         
-    - name: 🐳 Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+    - name: 🔐 Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
       
-    - name: 🔐 Login to NCP Container Registry
-      run: |
-        echo "🔑 Logging in to NCP Container Registry..."
-        echo "${{ secrets.NCP_SECRET_KEY }}" | docker login ${{ env.NCP_REGISTRY }} \
-          --username "${{ secrets.NCP_ACCESS_KEY }}" \
-          --password-stdin
-        
-    - name: 🏗️ Build and Push Docker Image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: |
-          ${{ env.NCP_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.IMAGE_TAG }}
-          ${{ env.NCP_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        
-    - name: 🔧 Install kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'v1.28.0'
-        
-    - name: 🏗️ Set up Kustomize
-      run: |
-        curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-        sudo mv kustomize /usr/local/bin/
-        
-    - name: 📥 Install NCP IAM Authenticator
-      run: |
-        # Download and install ncp-iam-authenticator from official NCP storage
-        curl -o ncp-iam-authenticator https://kr.object.ncloudstorage.com/nks-download/ncp-iam-authenticator/v1.0.5/linux/amd64/ncp-iam-authenticator
-        chmod +x ./ncp-iam-authenticator
-        sudo mv ./ncp-iam-authenticator /usr/local/bin/
-        
-        # Verify installation
-        ncp-iam-authenticator help
-        
-    - name: ⚙️ Configure kubectl for NCP
+    - name: 🔑 Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+      
+    - name: 🐳 Build and Push Docker Image to ECR
       env:
-        NCLOUD_ACCESS_KEY: ${{ secrets.NCP_ACCESS_KEY }}
-        NCLOUD_SECRET_KEY: ${{ secrets.NCP_SECRET_KEY }}
-        NCLOUD_API_GW: https://ncloud.apigw.ntruss.com
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ steps.version.outputs.IMAGE_TAG }}
       run: |
-        mkdir -p ~/.kube
-        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
-        kubectl config set-context --current --namespace=${{ env.KUBE_NAMESPACE }}
+        echo "🏗️ Building Docker image..."
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
         
-        # Export NCP credentials for authenticator
-        export NCLOUD_ACCESS_KEY="${{ secrets.NCP_ACCESS_KEY }}"
-        export NCLOUD_SECRET_KEY="${{ secrets.NCP_SECRET_KEY }}"
-        export NCLOUD_API_GW="https://ncloud.apigw.ntruss.com"
+        echo "⬆️ Pushing to ECR..."
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
         
-        # Verify connection
-        kubectl cluster-info
+        echo "✅ Image pushed: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
         
-    - name: 🚀 Deploy to Kubernetes
+    - name: 📝 Create Dockerrun.aws.json
       env:
-        NCLOUD_ACCESS_KEY: ${{ secrets.NCP_ACCESS_KEY }}
-        NCLOUD_SECRET_KEY: ${{ secrets.NCP_SECRET_KEY }}
-        NCLOUD_API_GW: https://ncloud.apigw.ntruss.com
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ steps.version.outputs.IMAGE_TAG }}
       run: |
-        # Update deployment image
-        kubectl set image deployment/archive-api \
-          archive-api=${{ env.NCP_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.IMAGE_TAG }} \
-          -n ${{ env.KUBE_NAMESPACE }}
+        cat > Dockerrun.aws.json << EOF
+        {
+          "AWSEBDockerrunVersion": "1",
+          "Image": {
+            "Name": "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG",
+            "Update": "true"
+          },
+          "Ports": [
+            {
+              "ContainerPort": 5000,
+              "HostPort": 5000
+            }
+          ]
+        }
+        EOF
+        echo "✅ Dockerrun.aws.json created"
+        cat Dockerrun.aws.json
         
-        # Wait for rollout to complete
-        kubectl rollout status deployment/archive-api -n ${{ env.KUBE_NAMESPACE }} --timeout=600s
+    - name: 📦 Create deployment package
+      run: |
+        zip -r deploy-${{ steps.version.outputs.COMMIT_HASH }}.zip Dockerrun.aws.json .ebextensions
+        echo "✅ Deployment package created"
         
-        # Verify deployment
-        kubectl get pods -n ${{ env.KUBE_NAMESPACE }} -l app=archive-api
+    - name: 🚀 Deploy to Elastic Beanstalk
+      uses: einaregilsson/beanstalk-deploy@v22
+      with:
+        aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        application_name: ${{ env.EB_APPLICATION_NAME }}
+        environment_name: ${{ env.EB_ENVIRONMENT_NAME }}
+        version_label: ${{ steps.version.outputs.IMAGE_TAG }}
+        region: ${{ env.AWS_REGION }}
+        deployment_package: deploy-${{ steps.version.outputs.COMMIT_HASH }}.zip
+        wait_for_deployment: true
+        wait_for_environment_recovery: 300
         
+    - name: 🧹 Cleanup
+      if: always()
+      run: |
+        rm -f deploy-*.zip
+        rm -f Dockerrun.aws.json
+
   notification:
     needs: build-and-deploy
     runs-on: ubuntu-latest
@@ -138,11 +141,12 @@ jobs:
     
     steps:
     - name: 📢 Notify Deployment Result
-      if: always()
       run: |
         if [ "${{ needs.build-and-deploy.result }}" == "success" ]; then
           echo "🎉 Deployment successful!"
-          echo "✅ Archive API has been successfully deployed to Kubernetes"
+          echo "✅ Archive API has been successfully deployed to AWS Elastic Beanstalk"
+          echo "🌐 Environment: ${{ env.EB_ENVIRONMENT_NAME }}"
+          echo "📦 Version: ${{ needs.build-and-deploy.outputs.IMAGE_TAG }}"
         else
           echo "❌ Deployment failed!"
           echo "🔍 Please check the logs for details"
